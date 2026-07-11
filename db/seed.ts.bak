@@ -1,0 +1,87 @@
+/**
+ * ============================================================
+ * db/seed.ts — Database Seeding Script
+ * ============================================================
+ */
+
+import { getDb } from "../api/queries/connection";
+import { users, categories, products } from "./schema";
+
+async function seed() {
+  const db = getDb();
+
+  console.log("🌱 Starting database seed...\n");
+
+  // ── 1. Clear existing data ──
+  await db.delete(products);
+  await db.delete(categories);
+  await db.delete(users);
+  console.log("  🗑️  Cleared existing data from all tables");
+
+  // ── 2. Insert Users ──
+  await db.insert(users).values([
+    { fullName: "เภสัชกร แอดมิน", email: "admin@pharmacare.th", phone: "081-234-5678", role: "admin", tier: "INDIVIDUAL", verificationStatus: "APPROVED", isActive: 1 },
+    { fullName: "สมชาย ใจดี", email: "somchai@email.com", phone: "089-876-5432", role: "customer", tier: "INDIVIDUAL", verificationStatus: "NONE", isActive: 1 },
+    { fullName: "ร้านขายยา ใจการุณย์", email: "retail@pharmacy.co.th", phone: "02-123-4567", role: "customer", tier: "RETAIL", verificationStatus: "PENDING", licenseDocumentUrl: "mock-license-retail-pharmacy.jpg", isActive: 1 },
+    { fullName: "คลินิกสมุนไพร วัลย์ลิกา", email: "clinic@wanlika.co.th", phone: "02-987-6543", role: "customer", tier: "CLINIC", verificationStatus: "APPROVED", licenseDocumentUrl: "mock-license-clinic-medical.jpg", isActive: 1 },
+  ] as any);
+  const seededUsers = await db.select().from(users);
+  console.log(`  👥 Inserted ${seededUsers.length} users`);
+  seededUsers.forEach((u: any) => {
+    const badge = u.role === "admin" ? "🛡️" : "👤";
+    const tierTag = u.tier !== "INDIVIDUAL" ? `[${u.tier}]` : "";
+    const statusTag = u.verificationStatus !== "NONE" ? `(${u.verificationStatus})` : "";
+    console.log(`      ${badge} ${u.fullName} ${tierTag} ${statusTag}`);
+  });
+
+  // ── 3. Insert Categories ──
+  await db.insert(categories).values([
+    { nameTh: "ยารักษาโรค", nameEn: "Medicines", slug: "medicines", descriptionTh: "ยาสำหรับรักษาโรคต่างๆ", descriptionEn: "Medicines for various conditions", icon: "pill", color: "#ef4444", sortOrder: 1, isActive: 1 },
+    { nameTh: "วิตามินและอาหารเสริม", nameEn: "Vitamins & Supplements", slug: "vitamins-supplements", descriptionTh: "วิตามินและอาหารเสริมบำรุงร่างกาย", descriptionEn: "Vitamins and dietary supplements", icon: "heart", color: "#22c55e", sortOrder: 2, isActive: 1 },
+    { nameTh: "อุปกรณ์การแพทย์", nameEn: "Medical Devices", slug: "medical-devices", descriptionTh: "อุปกรณ์ทางการแพทย์สำหรับใช้ในบ้าน", descriptionEn: "Home medical devices", icon: "stethoscope", color: "#3b82f6", sortOrder: 3, isActive: 1 },
+    { nameTh: "ผลิตภัณฑ์ดูแลสุขภาพ", nameEn: "Health Care", slug: "health-care", descriptionTh: "ผลิตภัณฑ์ดูแลสุขภาพและความงาม", descriptionEn: "Health and beauty care products", icon: "sparkles", color: "#a855f7", sortOrder: 4, isActive: 1 },
+  ] as any);
+  const seededCategories = await db.select().from(categories);
+  console.log(`  📁 Inserted ${seededCategories.length} categories`);
+
+  // ── 4. Insert Products with B2B pricing ──
+  const medCatId = seededCategories[0].id;
+  const vitCatId = seededCategories[1].id;
+  const devCatId = seededCategories[2].id;
+
+  await db.insert(products).values([
+    { sku: "PARA-500-100", nameTh: "พาราเซตามอล 500 มก.", nameEn: "Paracetamol 500mg", shortDescriptionTh: "ยาบรรเทาปวด ลดไข้", shortDescriptionEn: "Pain reliever and fever reducer", descriptionTh: "พาราเซตามอล 500 มิลลิกรัม ใช้บรรเทาอาการปวดและลดไข้", descriptionEn: "Paracetamol 500mg tablets for pain relief and fever reduction.", pricesJson: JSON.stringify({ individual: 45, retail: 40, clinic: 36 }), price: 45, originalPrice: 55, stock: 500, unit: "box", image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "RETAIL", "CLINIC"]), categoryId: medCatId, isFeatured: 1, requiresPrescription: 0, status: "active", rating: 4.8, reviewCount: 245, soldCount: 1200, weightGrams: 50, legalCategory: "HOUSEHOLD_REMEDY", genericNameTh: "พาราเซตามอล", genericNameEn: "Paracetamol", barcode: "8851938012345" },
+    { sku: "VITC-1000-30", nameTh: "วิตามินซี 1000 มก.", nameEn: "Vitamin C 1000mg", shortDescriptionTh: "วิตามินซีบำรุงภูมิคุ้มกัน", shortDescriptionEn: "Immune-boosting vitamin C supplement", descriptionTh: "วิตามินซี 1000 มิลลิกรัม ช่วยเสริมสร้างภูมิคุ้มกัน", descriptionEn: "Vitamin C 1000mg helps boost immune system.", pricesJson: JSON.stringify({ individual: 120, retail: 108, clinic: 96 }), price: 120, originalPrice: 150, stock: 300, unit: "bottle", image: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "RETAIL", "CLINIC"]), categoryId: vitCatId, isFeatured: 1, isNew: 1, requiresPrescription: 0, status: "active", rating: 4.6, reviewCount: 189, soldCount: 850, weightGrams: 80, legalCategory: "SUPPLEMENT", genericNameTh: "แอสคอร์บิกแอซิด", genericNameEn: "Ascorbic Acid", barcode: "8857208012345" },
+    { sku: "AMOX-500-21", nameTh: "อะม็อกซิซิลลิน 500 มก.", nameEn: "Amoxicillin 500mg", shortDescriptionTh: "ยาปฏิชีวนะกลุ่มเพนิซิลลิน (ต้องใช้ใบสั่งยา)", shortDescriptionEn: "Penicillin-class antibiotic (prescription required)", descriptionTh: "อะม็อกซิซิลลิน 500 มิลลิกรัม ยาปฏิชีวนะกลุ่มเพนิซิลลิน **ต้องใช้ใบสั่งยาแพทย์**", descriptionEn: "Amoxicillin 500mg is a penicillin-class antibiotic. **Prescription required.**", pricesJson: JSON.stringify({ individual: 85, retail: 0, clinic: 68 }), price: 85, originalPrice: 100, stock: 200, unit: "capsule", image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "CLINIC"]), categoryId: medCatId, requiresPrescription: 1, status: "active", rating: 4.9, reviewCount: 78, soldCount: 420, weightGrams: 30, legalCategory: "DANGEROUS_DRUG", genericNameTh: "อะม็อกซิซิลลิน", genericNameEn: "Amoxicillin", barcode: "8850999001234" },
+    { sku: "IBUP-400-30", nameTh: "ไอบูโพรเฟน 400 มก.", nameEn: "Ibuprofen 400mg", shortDescriptionTh: "ยาต้านการอักเสบ บรรเทาปวด", shortDescriptionEn: "Anti-inflammatory pain reliever", descriptionTh: "ไอบูโพรเฟน 400 มิลลิกรัม ยาต้านการอักเสบที่ไม่ใช่สเตอรอยด์ (NSAID)", descriptionEn: "Ibuprofen 400mg is a non-steroidal anti-inflammatory drug (NSAID).", pricesJson: JSON.stringify({ individual: 35, retail: 31, clinic: 28 }), price: 35, originalPrice: 42, stock: 400, unit: "tablet", image: "https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "RETAIL", "CLINIC"]), categoryId: medCatId, isNew: 1, requiresPrescription: 0, status: "active", rating: 4.5, reviewCount: 156, soldCount: 680, weightGrams: 25, legalCategory: "DANGEROUS_DRUG", genericNameTh: "ไอบูโพรเฟน", genericNameEn: "Ibuprofen", barcode: "8850366012345" },
+    { sku: "THERM-DIG-01", nameTh: "เทอร์โมมิเตอร์ดิจิตอล", nameEn: "Digital Thermometer", shortDescriptionTh: "วัดอุณหภูมิร่างกายแบบดิจิตอล", shortDescriptionEn: "Digital body temperature thermometer", descriptionTh: "เทอร์โมมิเตอร์ดิจิตอลวัดอุณหภูมิร่างกาย แสดงผลแบบตัวเลขชัดเจน", descriptionEn: "Digital thermometer for body temperature measurement.", pricesJson: JSON.stringify({ individual: 195, retail: 175, clinic: 156 }), price: 195, originalPrice: 250, stock: 150, unit: "piece", image: "https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "RETAIL", "CLINIC"]), categoryId: devCatId, isFeatured: 1, requiresPrescription: 0, status: "active", rating: 4.7, reviewCount: 203, soldCount: 560, weightGrams: 120, legalCategory: "HOUSEHOLD_REMEDY", genericNameTh: "เทอร์โมมิเตอร์ดิจิตอล", genericNameEn: "Digital Thermometer", barcode: "8850999012345" },
+    { sku: "MASK-3PLY-50", nameTh: "หน้ากากอนามัย 3 ชั้น (50 ชิ้น)", nameEn: "3-Ply Surgical Mask (50 pcs)", shortDescriptionTh: "หน้ากากอนามัย 3 ชั้น ป้องกันฝุ่นและเชื้อโรค", shortDescriptionEn: "3-ply surgical mask for dust and germ protection", descriptionTh: "หน้ากากอนามัย 3 ชั้น คุณภาพทางการแพทย์", descriptionEn: "Medical-grade 3-ply surgical mask.", pricesJson: JSON.stringify({ individual: 89, retail: 75, clinic: 65 }), price: 89, originalPrice: 120, stock: 1000, unit: "pack", image: "https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=400", visibleToJson: JSON.stringify(["INDIVIDUAL", "RETAIL", "CLINIC"]), categoryId: devCatId, isNew: 1, requiresPrescription: 0, status: "active", rating: 4.4, reviewCount: 312, soldCount: 2100, weightGrams: 200, legalCategory: "HOUSEHOLD_REMEDY", genericNameTh: "หน้ากากอนามัย 3 ชั้น", genericNameEn: "3-Ply Surgical Mask", barcode: "8850366123456" },
+  ] as any);
+  const seededProducts = await db.select().from(products);
+  console.log(`  💊 Inserted ${seededProducts.length} products`);
+  seededProducts.forEach((p: any) => {
+    const vis = JSON.parse(p.visibleToJson);
+    const hideRetail = !vis.includes("RETAIL") ? "🚫RETAIL" : "";
+    const rxBadge = p.requiresPrescription ? "📋Rx" : "";
+    console.log(`      • ${p.nameTh} ฿${p.price} ${hideRetail} ${rxBadge}`.trim());
+  });
+
+  // ── Summary ──
+  console.log("\n✅ Seed completed successfully!\n");
+  console.log("📊 Seeded Data Summary:");
+  console.log(`   Users      : ${seededUsers.length} accounts`);
+  console.log(`   Categories : ${seededCategories.length} categories`);
+  console.log(`   Products   : ${seededProducts.length} products with B2B pricing\n`);
+  console.log("🔐 Test Accounts:");
+  console.log(`   🛡️  Admin   : admin@pharmacare.th`);
+  console.log(`   👤 Customer: somchai@email.com (INDIVIDUAL)`);
+  console.log(`   🏪 Retail  : retail@pharmacy.co.th (PENDING)`);
+  console.log(`   🏥 Clinic  : clinic@wanlika.co.th (APPROVED)\n`);
+
+  process.exit(0);
+}
+
+seed().catch((err) => {
+  console.error("\n❌ Seed failed:", err);
+  process.exit(1);
+});

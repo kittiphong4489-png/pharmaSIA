@@ -1,0 +1,4 @@
+.railway/
+node_modules/
+dist/
+images/

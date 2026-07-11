@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PharmaCare - ดึงข้อมูล Forte</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .container { background: white; border-radius: 24px; padding: 40px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+  h1 { font-size: 24px; color: #1e293b; margin-bottom: 8px; text-align: center; }
+  p { color: #64748b; text-align: center; margin-bottom: 24px; font-size: 14px; }
+  .input-group { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; transition: all 0.2s; }
+  input:focus { outline: none; border-color: #667eea; }
+  button { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+  button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
+  button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .status { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 13px; display: none; }
+  .status.show { display: block; }
+  .status.success { background: #d1fae5; color: #065f46; }
+  .status.error { background: #fee2e2; color: #991b1b; }
+  .status.loading { background: #dbeafe; color: #1e40af; }
+  .progress { margin-top: 12px; }
+  .progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s; width: 0%; }
+  .result { margin-top: 16px; max-height: 300px; overflow-y: auto; }
+  .result-item { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; display: flex; justify-content: space-between; }
+  .result-item:nth-child(odd) { background: #f8fafc; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+  .badge.success { background: #d1fae5; color: #065f46; }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 016.5 2H20v20H6.5a2.5 2.5 0 010-5H20"/><path d="M6.5 2H20v20H6.5a2.5 2.5 0 010-5H20"/></svg>
+      </div>
+      <h1>ดึงข้อมูล Forte</h1>
+      <p>ระบบดึงข้อมูลสินค้าจาก Forte Mukdahan 2014</p>
+    </div>
+
+    <div class="input-group">
+      <label>Username</label>
+      <input type="text" id="username" value="MK25-0264" readonly style="background: #f8fafc;">
+    </div>
+
+    <div class="input-group">
+      <label>รหัสผ่าน Forte</label>
+      <input type="password" id="password" value="MK25-0264" placeholder="ใส่รหัสผ่าน">
+    </div>
+
+    <button id="syncBtn" onclick="startSync()">🚀 ดึงข้อมูล</button>
+
+    <div id="status" class="status"></div>
+
+    <div class="progress" id="progress" style="display: none;">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <p style="text-align: center; font-size: 12px; color: #64748b; margin-top: 8px;" id="progressText">0 / 0 รายการ</p>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+
+<script>
+const API_BASE = '/api/trpc';
+let sessionId = null;
+let allProducts = [];
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+function updateProgress(current, total) {
+  const pct = total > 0 ? (current / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${current} / ${total} รายการ`;
+}
+
+async function startSync() {
+  const btn = document.getElementById('syncBtn');
+  const password = document.getElementById('password').value;
+  
+  if (!password) { showStatus('❌ กรุณาใส่รหัสผ่าน', 'error'); return; }
+  
+  btn.disabled = true;
+  document.getElementById('progress').style.display = 'block';
+  document.getElementById('result').innerHTML = '';
+  allProducts = [];
+  
+  try {
+    // Step 1: Login
+    showStatus('🔐 กำลัง Login...', 'loading');
+    const loginRes = await fetch(`${API_BASE}/forteProxy.login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'MK25-0264', password })
+    });
+    const loginData = await loginRes.json();
+    
+    if (!loginData.result?.data?.success) {
+      showStatus('❌ Login ไม่สำเร็จ: ' + (loginData.result?.data?.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      return;
+    }
+    
+    sessionId = loginData.result.data.sessionId;
+    showStatus('✅ Login สำเร็จ! กำลังดึงข้อมูล...', 'loading');
+    
+    // Step 2: Fetch all pages
+    let page = 1;
+    let hasMore = true;
+    const pageSize = 100;
+    
+    while (hasMore && page <= 100) {
+      const fetchRes = await fetch(`${API_BASE}/forteProxy.fetchPage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          page,
+          pageSize,
+          marginSettings: { defaultMargin: 15, categoryMargins: {}, productMargins: {}, roundTo: '0.5' }
+        })
+      });
+      
+      const fetchData = await fetchRes.json();
+      const result = fetchData.result?.data;
+      
+      if (!result?.success) {
+        showStatus('❌ ดึงข้อมูลไม่สำเร็จ: ' + (result?.error || 'Unknown'), 'error');
+        break;
+      }
+      
+      allProducts.push(...result.products);
+      updateProgress(allProducts.length, result.totalCount);
+      
+      if (result.products.length < pageSize || allProducts.length >= result.totalCount) {
+        hasMore = false;
+      }
+      page++;
+    }
+    
+    // Step 3: Save to localStorage
+    showStatus(`💾 บันทึก ${allProducts.length} รายการ...`, 'loading');
+    
+    // Trim images to save space
+    const trimmed = allProducts.map(p => ({ ...p, imageUrl: '' }));
+    localStorage.setItem('pharmacare_forte_products', JSON.stringify(trimmed));
+    localStorage.setItem('pharmacare_forte_meta', JSON.stringify({
+      lastSync: new Date().toISOString(),
+      count: allProducts.length
+    }));
+    
+    // Show results
+    showStatus(`✅ ดึงข้อมูลสำเร็จ! ${allProducts.length} รายการ`, 'success');
+    
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `<div style="padding: 12px; background: #f0fdf4; border-radius: 12px; margin-bottom: 12px;">
+      <strong>สรุป:</strong> ดึงข้อมูล ${allProducts.length} รายการสำเร็จ<br>
+      <small style="color: #64748b;">บันทึกใน localStorage แล้ว (เฉพาะเครื่องนี้)</small>
+    </div>`;
+    
+    // Show first 20 items
+    allProducts.slice(0, 20).forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'result-item';
+      div.innerHTML = `<span>${p.nameTh}</span><strong>฿${p.sellingPrice}</strong>`;
+      resultDiv.appendChild(div);
+    });
+    
+    if (allProducts.length > 20) {
+      const more = document.createElement('div');
+      more.style = 'text-align: center; padding: 12px; color: #64748b; font-size: 12px;';
+      more.textContent = `... และอีก ${allProducts.length - 20} รายการ`;
+      resultDiv.appendChild(more);
+    }
+    
+  } catch (err) {
+    showStatus('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
