@@ -440,15 +440,25 @@ app.post("/api/orders", async (c) => {
       grandTotal, message: `ออเดอร์ ${orderNumber} จาก ${body.customerName || 'ลูกค้า'} ยอด ฿${grandTotal.toFixed(2)}`,
     }));
 
-    // ── Telegram notification (async, non-blocking) ──
+    // ── Telegram notification (async, non-blocking) with order details + approve buttons ──
     try {
       const { notifyNewOrderAsync } = await import("./lib/telegramNotify");
+      const orderItems = db.prepare("SELECT * FROM order_items WHERE orderId = ?").all(orderId) as any[];
       notifyNewOrderAsync({
         orderNumber,
         orderId: orderId as number,
         grandTotal,
         customerName: body.customerName || "",
+        customerPhone: body.customerPhone || "",
+        shippingFee: body.shippingFee || 0,
         slipUrl: body.slipUrl || "",
+        items: orderItems.map((i: any) => ({
+          productNameTh: i.productNameTh || i.productNameEn,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          subtotal: i.subtotal,
+        })),
+        shippingAddress: body.shippingAddress || "",
       });
     } catch (e: any) {
       console.error("[Telegram] Import error (non-blocking):", e?.message);

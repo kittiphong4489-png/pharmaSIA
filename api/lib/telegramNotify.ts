@@ -1,32 +1,46 @@
 /**
  * api/lib/telegramNotify.ts
- * Telegram Bot Notifier — แจ้งเตือนออเดอร์ใหม่ผ่าน Telegram ฟรี 100%
+ * Telegram Bot Notifier — แจ้งเตือนออเดอร์ + ปุ่มอนุมัติ
  *
- * วิธีตั้งค่า Bot (ทำครั้งเดียว):
- * 1. เปิด Telegram → ค้นหา @BotFather → สั่ง /newbot
- * 2. ตั้งชื่อ Bot → ได้ TELEGRAM_BOT_TOKEN
- * 3. สั่ง /start กับ Bot → หา Chat ID (ส่งข้อความหา Bot แล้วเรียก
- *    https://api.telegram.org/bot{YOUR_TOKEN}/getUpdates)
- * 4. ใส่ค่าลงใน .env หรือ environment variables
+ * รองรับ Inline Keyboard:
+ *   ✅ อนุมัติ → แจ้ง Admin ว่าอนุมัติสำเร็จ
+ *   ❌ ปฏิเสธ → ให้ Admin พิมพ์เหตุผล
+ *
+ * วิธีตั้งค่า (ทำครั้งเดียว):
+ * 1. @BotFather → /newbot → ได้ TELEGRAM_BOT_TOKEN
+ * 2. ส่งข้อความหา Bot → https://api.telegram.org/bot{TOKEN}/getUpdates → หา Chat ID
+ * 3. ใส่ .env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+ * 4. ต้อง Deploy ให้ Railway URL ตรงกับ BOT_DOMAIN
  */
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
 
-interface OrderNotification {
-  orderNumber: string;
+interface OrderItem {
+  productNameTh?: string;
+  quantity?: number;
+  unitPrice?: number;
+  subtotal?: number;
+}
+
+interface FullOrderNotification {
   orderId: number;
+  orderNumber: string;
   grandTotal: number;
   customerName: string;
+  customerPhone?: string;
+  shippingFee?: number;
+  items?: OrderItem[];
   slipUrl?: string;
+  shippingAddress?: string;
 }
 
 /**
- * sendTelegramNotification — ส่งข้อความแจ้งเตือนไปยัง Telegram
- * Async-friendly: ไม่ block การทำงานหลัก
+ * sendOrderNotificationWithActions — ส่งข้อความแจ้งเตือน + ปุ่ม
  */
-export async function sendTelegramNotification(order: OrderNotification): Promise<void> {
+export async function sendOrderNotificationWithActions(order: FullOrderNotification): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN || "";
   const chatId = process.env.TELEGRAM_CHAT_ID || "";
+  const botDomain = process.env.BOT_DOMAIN || "https://pharmacare-1783398975-production.up.railway.app";
 
   if (!token || !chatId) {
     console.log("[Telegram] ⏭️ Skipped — TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set");
@@ -34,52 +48,136 @@ export async function sendTelegramNotification(order: OrderNotification): Promis
   }
 
   const baseUrl = TELEGRAM_API + token;
-  const adminUrl = "https://pharmacare.example.com/seller/orders"; // TODO: เปลี่ยนเป็น URL จริง
+
+  // ── Build order details message ──
+  const itemLines = (order.items || []).slice(0, 8).map((it, i) =>
+    `${i + 1}. ${(it.productNameTh || "สินค้า").substring(0, 50)} x${it.quantity || 1} = ฿${(it.subtotal || 0).toFixed(2)}`
+  ).join("\n");
+  const moreItems = (order.items || []).length > 8
+    ? `\n...และอีก ${(order.items || []).length - 8} รายการ`
+    : "";
 
   const message = [
     "🚨 *มีคำสั่งซื้อใหม่!*",
     "",
-    `🏷️ รหัสออเดอร์: *${order.orderNumber}*`,
+    `🏷️ ออเดอร์: *${order.orderNumber}*`,
     `👤 ลูกค้า: ${order.customerName || "ไม่ระบุ"}`,
-    `💰 ยอดรวม: *฿${order.grandTotal?.toFixed(2) || "0.00"}*`,
+    `📞 โทร: ${order.customerPhone || "-"}`,
     "",
-    ...(order.slipUrl ? [`📎 สลิปโอนเงิน: ${order.slipUrl}`] : []),
+    `📦 *สินค้า:*`,
+    itemLines + moreItems,
     "",
-    `🔗 ตรวจสอบและจัดส่ง: ${adminUrl}`,
+    ...(order.shippingFee !== undefined ? [`🚚 ค่าจัดส่ง: ${order.shippingFee === 0 ? "ฟรี" : `฿${order.shippingFee.toFixed(2)}`}`] : []),
+    `💰 *ยอดรวม: ฿${order.grandTotal?.toFixed(2) || "0.00"}*`,
+    "",
+    ...(order.shippingAddress ? [`📍 ที่อยู่: ${order.shippingAddress.substring(0, 100)}`] : []),
+    ...(order.slipUrl ? [`📎 สลิป: ${order.slipUrl}`] : []),
+    "",
     `⏱ ${new Date().toLocaleString("th-TH")}`,
   ].join("\n");
 
   try {
-    const res = await fetch(`${baseUrl}/sendMessage`, {
+    // Send the message with inline buttons
+    await fetch(`${baseUrl}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
         parse_mode: "Markdown",
-        disable_web_page_preview: false,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: "✅ อนุมัติออเดอร์",
+              callback_data: `approve:${order.orderId}`,
+            },
+            {
+              text: "❌ ปฏิเสธ",
+              callback_data: `reject:${order.orderId}`,
+            },
+          ]],
+        },
       }),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error(`[Telegram] ❌ Send failed (${res.status}): ${err}`);
-    } else {
-      console.log(`[Telegram] ✅ Notification sent for ${order.orderNumber}`);
-    }
+    console.log(`[Telegram] ✅ Sent with buttons for ${order.orderNumber}`);
   } catch (err: any) {
-    // ไม่บล็อกการทำงานหลัก — แค่ Log ไว้
-    console.error(`[Telegram] ⚠️ Network error (non-blocking): ${err?.message || err}`);
+    console.error(`[Telegram] ⚠️ Error (non-blocking): ${err?.message || err}`);
   }
 }
 
 /**
- * ฟังก์ชันเรียกใน POST /api/orders หลังจากสร้างออเดอร์สำเร็จ
- * ใช้แบบ fire-and-forget — ไม่ต้อง await
+ * Telegram webhook handler — รับ callback จากปุ่ม
+ * เอาไป mount ที่ app.post("/telegram/callback", ...)
  */
-export function notifyNewOrderAsync(order: OrderNotification): void {
-  sendTelegramNotification(order).catch((err) => {
+export async function handleTelegramCallback(body: any): Promise<string> {
+  const token = process.env.TELEGRAM_BOT_TOKEN || "";
+  const chatId = process.env.TELEGRAM_CHAT_ID || "";
+  if (!token || !chatId) return "No token";
+
+  const callbackData = body?.callback_query?.data || "";
+  const callbackId = body?.callback_query?.id || "";
+  const messageId = body?.callback_query?.message?.message_id || 0;
+
+  if (!callbackData) return "No callback data";
+
+  const baseUrl = TELEGRAM_API + token;
+
+  if (callbackData.startsWith("approve:")) {
+    const orderId = parseInt(callbackData.split(":")[1]);
+    
+    // Answer the callback (remove loading state)
+    await fetch(`${baseUrl}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callback_query_id: callbackId,
+        text: "⏳ กำลังอนุมัติออเดอร์...",
+        show_alert: false,
+      }),
+    });
+
+    // Update the message to show approved
+    await fetch(`${baseUrl}/editMessageText`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+        text: `✅ *ออเดอร์ #${orderId} ได้รับการอนุมัติแล้ว!*\n\n(โดย Admin ผ่าน Telegram)\n⏱ ${new Date().toLocaleString("th-TH")}`,
+        parse_mode: "Markdown",
+        reply_markup: { inline_keyboard: [] },
+      }),
+    });
+
+    return `approved:${orderId}`;
+  }
+
+  if (callbackData.startsWith("reject:")) {
+    const orderId = parseInt(callbackData.split(":")[1]);
+
+    await fetch(`${baseUrl}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callback_query_id: callbackId,
+        text: "พิมพ์เหตุผลที่ปฏิเสธ (ตอบกลับในแชทนี้)",
+        show_alert: true,
+      }),
+    });
+
+    return `rejected:${orderId}`;
+  }
+
+  return "Unknown action";
+}
+
+/**
+ * ฟังก์ชันเรียกใน POST /api/orders หลังจากสร้างออเดอร์สำเร็จ
+ */
+export function notifyNewOrderAsync(order: any): void {
+  sendOrderNotificationWithActions(order).catch((err) => {
     console.error("[Telegram] Async error (ignored):", err?.message);
   });
 }
