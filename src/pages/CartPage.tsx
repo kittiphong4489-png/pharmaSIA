@@ -243,7 +243,7 @@ export default function CartPage() {
       const token = getAuthToken();
       await apiClient(`/api/payments/${payment.id}/confirm`, {
         method: "POST",
-        headers: token ? { Authorization: *** ${token}` } : {},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slipUrl }),
       });
       setSlipConfirmed(true);

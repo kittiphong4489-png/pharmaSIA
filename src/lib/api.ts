@@ -84,7 +84,7 @@ export async function uploadImage(file: File, field: string = "image"): Promise<
   formData.append(field, file);
 
   const headers: Record<string, string> = {
-    ...(token ? { Authorization: *** ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   try {
