@@ -54,7 +54,7 @@ export default function AdminOrderPage() {
     try {
       const token = localStorage.getItem("pharma_token");
       const data = await apiClient("/api/orders", {
-        headers: token ? { Authorization: **Bearer ${token}** } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setOrders(data.orders || []);
       // Fetch payments for each order
@@ -62,7 +62,7 @@ export default function AdminOrderPage() {
       for (const order of data.orders || []) {
         try {
           const payData = await apiClient(`/api/payments/order/${order.id}`, {
-            headers: token ? { Authorization: **Bearer ${token}** } : {},
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
           if (payData.payment) payMap[order.id] = payData.payment;
         } catch {}
@@ -79,7 +79,7 @@ export default function AdminOrderPage() {
       const token = localStorage.getItem("pharma_token");
       await apiClient(`/api/seller/orders/${orderId}/status`, {
         method: "PUT",
-        headers: token ? { Authorization: **Bearer ${token}** } : { "Content-Type": "application/json" },
+        headers: token ? { Authorization: `Bearer ${token}` } : { "Content-Type": "application/json" },
         body: JSON.stringify({ status, trackingNumber: tracking || "" }),
       });
       loadOrders();
