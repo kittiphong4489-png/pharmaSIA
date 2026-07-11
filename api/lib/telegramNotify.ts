@@ -138,6 +138,19 @@ export async function handleTelegramCallback(body: any): Promise<string> {
       }),
     });
 
+    // Update order in database
+    try {
+      const { getDb } = await import("../queries/connection");
+      const db = getDb();
+      const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId) as any;
+      if (order && order.status === "pending") {
+        db.prepare("UPDATE orders SET status = 'paid', paidAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?").run(orderId);
+        console.log(`[Telegram] ✅ Order #${orderId} approved via Telegram`);
+      }
+    } catch (e: any) {
+      console.error("[Telegram] DB update error:", e?.message);
+    }
+
     // Update the message to show approved
     await fetch(`${baseUrl}/editMessageText`, {
       method: "POST",

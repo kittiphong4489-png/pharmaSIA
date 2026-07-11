@@ -3312,6 +3312,35 @@ app.use("/api/trpc/*", async (c) => {
 if (env.isProduction) {
   const { serve } = await import("@hono/node-server");
   const { serveStaticFiles } = await import("./lib/vite");
+
+  // ── Telegram callback webhook ──
+  app.post("/telegram/callback", async (c) => {
+    try {
+      const body = await c.req.json();
+      const { handleTelegramCallback } = await import("./lib/telegramNotify");
+      const result = await handleTelegramCallback(body);
+      console.log("[Telegram] Callback processed:", result);
+      return c.json({ ok: true });
+    } catch (e: any) {
+      console.error("[Telegram] Callback error:", e?.message);
+      return c.json({ ok: false, error: e?.message }, 500);
+    }
+  });
+
+  // Set Telegram webhook (on startup)
+  try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (botToken) {
+      const webhookUrl = \`https://pharmacare-1783398975-production.up.railway.app/telegram/callback\`;
+      fetch(\`https://api.telegram.org/bot\${botToken}/setWebhook?url=\${webhookUrl}\`, {
+        signal: AbortSignal.timeout(5000),
+      }).then(r => r.json()).then(d => {
+        console.log("[Telegram] Webhook set:", d?.description || d?.ok);
+      }).catch(e => {
+        console.log("[Telegram] Webhook setup skipped:", e?.message);
+      });
+    }
+  } catch {}
   const { handleSSE } = await import("./routes/events");
   app.get("/api/events/stream", handleSSE);
 
