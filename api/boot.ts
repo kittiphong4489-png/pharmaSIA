@@ -1120,7 +1120,7 @@ app.post("/api/cart/link-user", async (c) => {
   }
 });
 
-// ── Image upload ──
+// ── Image upload (admin only) ──
 app.post("/api/upload/image", async (c) => {
   try {
     const payload = await requireAdmin(c);
@@ -1140,6 +1140,28 @@ app.post("/api/upload/image", async (c) => {
     return c.json({ success: true, url: `/api/images/${filename}` });
   } catch (e: any) {
     const db2 = getDb(); await logApiError(c, db2, "upload_image", "image", null, e);
+    return c.json({ success: false, error: e?.message }, 500);
+  }
+});
+
+// ── Slip image upload (public — no auth required) ──
+app.post("/api/upload/slip", async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    const file = body["image"] as any;
+    if (!file || !file.name) return c.json({ success: false, error: "No file" }, 400);
+    const fs = await import("fs");
+    const path = await import("path");
+    const dir = path.resolve(typeof __dirname !== "undefined" ? __dirname : process.cwd(),
+      typeof __dirname !== "undefined" ? "../data/images" : "data/images");
+    await fs.promises.mkdir(dir, { recursive: true });
+    const ext = file.name.split('.').pop() || "png";
+    const baseName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "");
+    const filename = `slip-${Date.now()}.${ext}`;
+    await fs.promises.writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
+    return c.json({ success: true, url: `/api/images/${filename}` });
+  } catch (e: any) {
+    const db2 = getDb(); await logApiError(c, db2, "upload_slip", "image", null, e);
     return c.json({ success: false, error: e?.message }, 500);
   }
 });

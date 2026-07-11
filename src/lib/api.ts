@@ -103,3 +103,26 @@ export async function uploadImage(file: File, field: string = "image"): Promise<
     throw error;
   }
 }
+
+
+/**
+ * Upload slip image (public - no auth required for customer payment slip)
+ */
+export async function uploadSlipImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+  try {
+    const res = await fetch("/api/upload/slip", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) {
+      throw new Error(data.error || "อัปโหลดสลิปไม่สำเร็จ");
+    }
+    return data.url;
+  } catch (error: any) {
+    console.error("[uploadSlipImage Error]:", error?.message || error);
+    throw error;
+  }
+}

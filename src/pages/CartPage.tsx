@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { apiClient, uploadImage } from "../lib/api";
+import { apiClient, uploadImage, uploadSlipImage } from "../lib/api";
 import { getSessionId } from "../lib/session";
 
 interface CartItem {
@@ -226,7 +226,7 @@ export default function CartPage() {
     if (!file) return;
     setSlipUploading(true);
     try {
-      const url = await uploadImage(file, "image");
+      const url = await uploadSlipImage(file);
       setSlipUrl(url);
       setSlipFile(file);
     } catch {
