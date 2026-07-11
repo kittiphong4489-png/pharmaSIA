@@ -643,8 +643,14 @@ app.get("/api/orders/:id/invoice", async (c) => {
       "Content-Disposition": `inline; filename="invoice-${id}.pdf"`,
     });
   } catch (e: any) {
+    console.error("[Invoice] Error generating PDF:", e?.message || e);
     const db = getDb(); await logApiError(c, db, "get_orders_id_invoice", "data", null, e);
-    return c.json({ error: e?.message }, 500);
+    // Return error message instead of crashing
+    try {
+      return c.html(`<html><body><h3>ไม่สามารถสร้างไฟล์ Invoice ได้</h3><p>${e?.message || "กรุณาติดต่อ Admin"}</p></body></html>`, 500);
+    } catch {
+      return c.json({ error: "Invoice generation failed" }, 500);
+    }
   }
 });
 
