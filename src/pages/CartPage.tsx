@@ -304,7 +304,7 @@ export default function CartPage() {
         {payment && !slipConfirmed && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 text-center">
             <h3 className="font-bold text-gray-900 mb-1">💳 ชำระเงินด้วย PromptPay</h3>
-            <p className="text-sm text-gray-500 mb-4">กรุณาชำระเงิน <strong>฿{Math.round(payment.amount)}</strong> โดยสแกน QR ด้านล่าง</p>
+            <p className="text-sm text-gray-500 mb-4">กรุณาชำระเงิน <strong>฿{payment.amount.toFixed(2)}</strong> โดยสแกน QR ด้านล่าง</p>
             <div className="flex justify-center">
               <div className="relative inline-flex">
                 <img src="/api/images/qr-promptpay.jpg" alt="PromptPay QR"
@@ -317,7 +317,7 @@ export default function CartPage() {
             <div className="text-sm text-gray-600 space-y-1 mt-4 bg-blue-50 rounded-xl p-4 text-center max-w-xs mx-auto">
               <p className="font-semibold text-gray-900">PharmaCare</p>
               <p>PromptPay: <span className="font-mono font-bold">075-3600-031</span></p>
-              <p className="text-xl font-bold text-blue-600">฿{Math.round(payment.amount)}</p>
+              <p className="text-xl font-bold text-blue-600">฿{payment.amount.toFixed(2)}</p>
             </div>
 
             {/* Slip Upload */}
@@ -435,16 +435,16 @@ export default function CartPage() {
           {!showCheckout ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
               <div className="space-y-3 mb-4">
-                <div className="flex justify-between text-sm"><span className="text-gray-600">ยอดสินค้า (ที่เลือก)</span><span className="font-medium">฿{Math.round(subtotal)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-600">ยอดสินค้า (ที่เลือก)</span><span className="font-medium">฿{subtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">ค่าจัดส่ง</span>
-                  <span className="font-medium">{selectedList.length === 0 ? "-" : shipping === 0 ? <span className="text-blue-600">ฟรี</span> : `฿${Math.round(shipping)}`}</span>
+                  <span className="font-medium">{selectedList.length === 0 ? "-" : shipping === 0 ? <span className="text-blue-600">ฟรี</span> : `฿${shipping.toFixed(2)}`}</span>
                 </div>
                 {shippingInfo.totalWeight > 0 && <p className="text-xs text-gray-400">น้ำหนักรวม: {(shippingInfo.totalWeight / 1000).toFixed(2)} กก.</p>}
                 {shippingInfo.promotion && <p className="text-xs text-green-600">✨ {shippingInfo.promotion}</p>}
                 <div className="border-t border-gray-100 pt-3 flex justify-between">
                   <span className="font-semibold text-gray-900">รวมทั้งสิ้น</span>
-                  <span className="text-xl font-bold text-blue-600">฿{Math.round(grandTotal)}</span>
+                  <span className="text-xl font-bold text-blue-600">฿{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
               <button onClick={() => {
@@ -566,7 +566,7 @@ export default function CartPage() {
               
               <div className="flex justify-between text-lg font-bold py-3 border-t border-gray-100 mt-4">
                 <span className="text-gray-900">รวมทั้งสิ้น ({selectedItems.size} รายการ)</span>
-                <span className="text-blue-600">฿{Math.round(grandTotal)}</span>
+                <span className="text-blue-600">฿{grandTotal.toFixed(2)}</span>
               </div>
               {hasStockIssue && (
                 <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
@@ -582,7 +582,7 @@ export default function CartPage() {
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowConfirmDialog(false)}>
                   <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">ยืนยันสั่งซื้อ</h3>
-                    <p className="text-sm text-gray-500 mb-4">ยืนยันดำเนินการสั่งซื้อ {selectedItems.size} รายการ รวมเป็นเงิน <strong className="text-blue-600">฿{Math.round(grandTotal)}</strong></p>
+                    <p className="text-sm text-gray-500 mb-4">ยืนยันดำเนินการสั่งซื้อ {selectedItems.size} รายการ รวมเป็นเงิน <strong className="text-blue-600">฿{grandTotal.toFixed(2)}</strong></p>
                     <div className="flex gap-3">
                       <button onClick={() => setShowConfirmDialog(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-all">ยกเลิก</button>
                       <button onClick={() => { setShowConfirmDialog(false); placeOrder(); }} className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-all">ยืนยัน</button>

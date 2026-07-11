@@ -434,10 +434,10 @@ app.post("/api/orders", async (c) => {
     // Create notification — use customer's userId if available
     db.prepare(`INSERT INTO notifications (userId, type, title, message, createdAt)
       VALUES (?, 'order_pending', 'มีออเดอร์ใหม่', ?, datetime('now'))`)
-      .run(userId || 1, `ออเดอร์ ${orderNumber} จาก ${body.customerName || 'ลูกค้า'} ยอด ฿${grandTotal| 0}`);
+      .run(userId || 1, `ออเดอร์ ${orderNumber} จาก ${body.customerName || 'ลูกค้า'} ยอด ฿${grandTotal.toFixed(2)}`);
     eventBus.emit(createEvent(EventType.ORDER_CREATED, "boot.ts:orders", {
       orderId, orderNumber, userId, customerName: body.customerName,
-      grandTotal, message: `ออเดอร์ ${orderNumber} จาก ${body.customerName || 'ลูกค้า'} ยอด ฿${grandTotal| 0}`,
+      grandTotal, message: `ออเดอร์ ${orderNumber} จาก ${body.customerName || 'ลูกค้า'} ยอด ฿${grandTotal.toFixed(2)}`,
     }));
 
     // ── Telegram notification (async, non-blocking) with order details + approve buttons ──
@@ -2253,7 +2253,7 @@ function generatePromptPayPayload(phone: string, amount: number): string {
   const pLen = String(phone.length).padStart(2, "0");
   const md = `00${String(guid.length).padStart(2, "0")}${guid}01${pLen}${phone}`;
   const cat = "5999";
-  const amt = amount| 0;
+  const amt = amount.toFixed(2);
   let tlv = `00020101021229${String(md.length).padStart(2, "0")}${md}5204${cat}530376454${String(amt.length).padStart(2, "0")}${amt}5802TH5910PharmaCare6007Bangkok6304`;
   return tlv + crc16(tlv);
 }
@@ -2339,7 +2339,7 @@ app.post("/api/payments/:id/confirm", async (c) => {
     if (order && order.userId) {
       db.prepare(`INSERT INTO notifications (userId, type, title, message, createdAt)
         VALUES (?, 'payment_confirm', 'ชำระเงินสำเร็จ', ?, datetime('now'))`)
-        .run(order.userId, `ชำระเงินออเดอร์ ${order.orderNumber} เรียบร้อยแล้ว จำนวน ฿${payment.amount| 0}`);
+        .run(order.userId, `ชำระเงินออเดอร์ ${order.orderNumber} เรียบร้อยแล้ว จำนวน ฿${payment.amount.toFixed(2)}`);
       eventBus.emit(createEvent(EventType.PAYMENT_CONFIRMED, "boot.ts:payments", {
         orderId: payment.orderId, orderNumber: order.orderNumber,
         userId: order.userId, amount: payment.amount,
