@@ -156,8 +156,8 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
       const name = (item.productNameTh || item.productNameEn || "สินค้า").substring(0, 80);
       doc.text(name, T_NAME, y, { width: T_QTY - T_NAME - 6 });
       doc.text(String(item.quantity || 1), T_QTY, y, { width: 40, align: "center" });
-      doc.text(`฿${Number(item.unitPrice).toFixed(2)}`, T_PRICE, y, { width: 70, align: "right" });
-      doc.text(`฿${(item.subtotal || item.unitPrice * item.quantity).toFixed(2)}`, T_TOTAL, y, { width: T_WIDTH - 8, align: "right" });
+      doc.text(`฿${Number(item.unitPrice)| 0}`, T_PRICE, y, { width: 70, align: "right" });
+      doc.text(`฿${(item.subtotal || item.unitPrice * item.quantity)| 0}`, T_TOTAL, y, { width: T_WIDTH - 8, align: "right" });
       y += 17;
       if (y > 700) { doc.addPage(); y = 50; }
     }
@@ -171,13 +171,13 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     const totW = 65;         // totals value width
     doc.moveTo(totL, y).lineTo(RE, y).strokeColor("#e5e7eb").stroke(); y += 11;
     doc.font("Thai").fontSize(10).fillColor("#374151");
-    doc.text("ยอดสินค้า:", totL, y); doc.text(`฿${Number(order.subtotal || 0).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
-    doc.text("ค่าจัดส่ง:", totL, y); doc.text(Number(order.shippingFee) === 0 ? "ฟรี" : `฿${Number(order.shippingFee).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
+    doc.text("ยอดสินค้า:", totL, y); doc.text(`฿${Number(order.subtotal || 0)| 0}`, totV, y, { width: totW, align: "right" }); y += 19;
+    doc.text("ค่าจัดส่ง:", totL, y); doc.text(Number(order.shippingFee) === 0 ? "ฟรี" : `฿${Number(order.shippingFee)| 0}`, totV, y, { width: totW, align: "right" }); y += 19;
     if (Number(order.tax || 0) > 0) {
-      doc.text("ภาษี:", totL, y); doc.text(`฿${Number(order.tax).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
+      doc.text("ภาษี:", totL, y); doc.text(`฿${Number(order.tax)| 0}`, totV, y, { width: totW, align: "right" }); y += 19;
     }
     doc.font("Thai-Bold").fontSize(14).fillColor("#1e40af");
-    doc.text("รวมทั้งสิ้น:", totL, y); doc.text(`฿${Number(order.grandTotal || 0).toFixed(2)}`, totV, y, { width: totW + 5, align: "right" }); y += 30;
+    doc.text("รวมทั้งสิ้น:", totL, y); doc.text(`฿${Number(order.grandTotal || 0)| 0}`, totV, y, { width: totW + 5, align: "right" }); y += 30;
 
     // ══════════════════════════════════════════════
     //  FOOTER
