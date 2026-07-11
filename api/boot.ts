@@ -3058,6 +3058,11 @@ app.get("/health", async (c) => {
   return c.json(result);
 });
 
+// ── Railway healthcheck alias ──
+app.get("/api/health", async (c) => {
+  return c.json({ ok: true, ts: Date.now(), v: "pharmacare-v3-refactored" });
+});
+
 // ── POS (Point of Sale) — quick order without address ──
 app.post("/api/pos/order", async (c) => {
   try {
