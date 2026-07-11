@@ -151,8 +151,24 @@ export default function AdminOrderPage() {
                       </button>
                     )}
 
+                    {/* Start Packing Button */}
+                    {order.status === "confirmed" && (
+                      <button onClick={() => updateStatus(order.id, "packing")}
+                        className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        📦 เริ่มแพ็ค
+                      </button>
+                    )}
+
+                    {/* Finish Packing Button */}
+                    {order.status === "packing" && (
+                      <button onClick={() => updateStatus(order.id, "packed")}
+                        className="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        📦✅ แพ็คเสร็จ
+                      </button>
+                    )}
+
                     {/* Shipping Input + Button */}
-                    {order.status === "confirmed" && !isShipped && (
+                    {order.status === "packed" && (
                       <div className="flex items-center gap-1">
                         <input
                           type="text"
