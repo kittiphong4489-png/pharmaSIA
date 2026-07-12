@@ -128,9 +128,12 @@ app.put("/api/categories/:id", async (c) => {
     const id = parseInt(c.req.param("id"));
     const body = await c.req.json();
     const db = getDb();
-    db.prepare("UPDATE categories SET nameTh = ?, nameEn = ?, slug = ?, icon = ?, color = ?, sortOrder = ? WHERE id = ?").run(
-      body.nameTh || "", body.nameEn || "", body.slug || "", body.icon || "📦", body.color || "gray", body.sortOrder || 99, id
-    );
+    const isActive = body.isActive !== undefined ? body.isActive : null;
+    let sql = "UPDATE categories SET nameTh = ?, nameEn = ?, slug = ?, icon = ?, color = ?, sortOrder = ?";
+    const params = [body.nameTh || "", body.nameEn || "", body.slug || "", body.icon || "📦", body.color || "gray", body.sortOrder || 99];
+    if (isActive !== null) { sql += ", isActive = ?"; params.push(isActive); }
+    sql += " WHERE id = ?"; params.push(id);
+    db.prepare(sql).run(...params);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e?.message }, 500);
