@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { apiClient, getAuthToken } from "../lib/api";
+import { apiClient } from "../lib/api";
 import PaymentFlow from "../components/PaymentFlow";
 
 export default function AccountOrderDetailPage() {
@@ -17,7 +17,7 @@ export default function AccountOrderDetailPage() {
   useEffect(() => {
     (async () => {
       try {
-        const token = getAuthToken();
+        const token = localStorage.getItem("pharma_token");
         const res = await fetch(`/api/orders/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
