@@ -3694,6 +3694,74 @@ if (env.isProduction) {
       }
       db.prepare("UPDATE categories SET isActive=0 WHERE id=6").run();
       db.prepare("UPDATE products SET categoryId=4 WHERE categoryId=6").run();
+      // Re-categorize: check if cat 1 still has too many (dangerous drugs not yet separated)
+      const count1 = (db.prepare("SELECT COUNT(*) as c FROM products WHERE categoryId=1").get() as any).c;
+      if (count1 > 4000) {
+        console.log(`[Migration] จัดหมวดสินค้า ${count1} รายการ...`);
+        // Move dangerous drugs to cat 11
+        const drugs = [
+          'amoxicillin','amoxi','cloxacillin','cephalexin','cepha','ceftriaxone','cefminox','cefixime',
+          'azithromycin','clindamycin','gentamicin','neomycin','chloramphenicol','tetracycline','doxycycline',
+          'metronidazole','norfloxacin','ciprofloxacin','ofloxacin','levofloxacin',
+          'glibenclamide','metformin','glipizide','insulin','lantus','novorapid',
+          'amlodipine','enalapril','losartan','irbesartan','valsartan','telmisartan','hydrochlorothiazide',
+          'simvastatin','atorvastatin','rosuvastatin','pravastatin',
+          'warfarin','clopidogrel','ticagrelor','furosemide','spironolactone',
+          'prednisolone','prednisone','dexamethasone','betamethasone','methylprednisolone',
+          'levothyroxine','eltroxin','methotrexate','azathioprine',
+          'salbutamol','ventolin','pulmicort','budesonide','salmeterol','formoterol',
+          'omeprazole','pantoprazole','lansoprazole','esomeprazole','rabeprazole',
+          'tramadol','codeine','morphine','fentanyl','oxycodone',
+          'gabapentin','pregabalin','diazepam','lorazepam','clonazepam','alprazolam',
+          'haloperidol','risperidone','olanzapine','quetiapine','chlorpromazine',
+          'phenytoin','phenobarbital','carbamazepine','valproate','levetiracetam','lamotrigine',
+          'sildenafil','tadalafil','vardenafil','finasteride','tamsulosin','dutasteride',
+          'ketoconazole','fluconazole','itraconazole','terbinafine','griseofulvin',
+          'acyclovir','valacyclovir','famciclovir','oseltamivir',
+          'diclofenac','piroxicam','meloxicam','etoricoxib','celecoxib','indomethacin',
+          'colchicine','allopurinol','febuxostat',
+          'betahistine','cinnarizine','meclizine',
+          'pilocarpine','timolol','latanoprost','brimonidine','dorzolamide',
+          'levodopa','carbidopa','donepezil','memantine',
+          'bisoprolol','metoprolol','carvedilol','atenolol','propranolol',
+          'digoxin','amiodarone','nitrofurantoin',
+          'diphenhydramine','chlorpheniramine',  // these stay in cat 1 - OTC
+          'albendazole','mebendazole','praziquantel',
+          'miconazole','clotrimazole',
+          'benzoyl','adapalene','isotretinoin',
+          'calcium carbonate','calcium lactate',
+          'ferrous fumarate','ferrous sulfate',
+        ];
+        for (const drug of drugs) {
+          db.prepare("UPDATE products SET categoryId=11 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ? OR LOWER(genericNameTh) LIKE ?)")
+            .run(`%${drug}%`,`%${drug}%`,`%${drug}%`);
+        }
+        // Move medical supplies to cat 5
+        const supplies = ['เข็ม','needle','syringe','ไซริง','gauze','ผ้ากอส','glove','ถุงมือ',
+          'thermometer','accu-chek','test strip','strips','bandage','stethoscope','wheelchair',
+          'walking','cane','walker','catheter','foley','oxygen','cannula','nebulizer',
+          'pill planner','pill pocket','ตลับใส่ยา','spacer']; // etc
+        for (const s of supplies) {
+          db.prepare("UPDATE products SET categoryId=5 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ?)")
+            .run(`%${s}%`,`%${s}%`);
+        }
+        // Move supplements to cat 3  
+        const supps = ['วิตามิน','vitamin','อาหารเสริม','supplement','calcium','magnesium',
+          'collagen','glucosamine','omega','fish oil','โปรตีน','protein','probiotic',
+          'lutein','coenzyme','q10'];
+        for (const sp of supps) {
+          db.prepare("UPDATE products SET categoryId=3 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ?)")
+            .run(`%${sp}%`,`%${sp}%`);
+        }
+        // Move cosmetics to cat 4
+        const cosmo = ['shampoo','แชมพู','soap','สบู่','lotion','cream','ครีม','sunscreen',
+          'deodorant','toothpaste','ยาสีฟัน','makeup','lip'];
+        for (const cm of cosmo) {
+          db.prepare("UPDATE products SET categoryId=4 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ?)")
+            .run(`%${cm}%`,`%${cm}%`);
+        }
+        console.log(`[Migration] ✅ จัดหมวดหมู่สินค้าเสร็จ`);
+      }
       // Re-categorize products: ยาอันตราย
       const dangerous = [
         'amoxicillin','amoxi','cloxacillin','cephalexin','cepha','cef-','ceftriaxone',
