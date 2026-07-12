@@ -41,8 +41,8 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     doc.on("error", reject);
 
     // Register Thai font (fallback silently)
-    try { doc.registerFont("Thai", path.join(FONT_DIR, "NotoSansThai.ttf")); } catch {}
-    try { doc.registerFont("Thai-Bold", path.join(FONT_DIR, "NotoSansThai.ttf")); } catch {}
+    try { doc.registerFont("Thai", path.join(FONT_DIR, "THSarabun.ttf")); } catch {}
+    try { doc.registerFont("Thai-Bold", path.join(FONT_DIR, "THSarabunBold.ttf")); } catch {}
 
     const fn = (bold = false) => { try { doc.font(bold ? "Thai-Bold" : "Thai"); } catch {} };
 
@@ -53,32 +53,45 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
 
     let y = ML;
 
-    // ═══════════════════════════════════════════════
-    //  HEADER — Store name centered
-    // ═══════════════════════════════════════════════
+    // ═════════════════════════════════════════════════
+    //  HEADER — Left: Store | Center: QR | Right: Order
+    // ═════════════════════════════════════════════════
+    const QR_SIZE = 72;              // 1x1 inch
+    const L_COL_W = PW * 0.38;       // left col ~38%
+    const R_COL_W = PW * 0.38;       // right col ~38%
+    const QR_X = ML + L_COL_W + (PW - L_COL_W - R_COL_W - QR_SIZE) / 2;  // centered between
+    const R_COL_R = RE;              // right col flush to right edge
+    const R_COL_L = R_COL_R - R_COL_W;  // right col left edge
+
+    // ── LEFT: Store Info ──
     fn(true);
-    doc.fontSize(18).fillColor("#2E7D32")
-      .text(s.storeNameTh || s.storeName || "PharmaCare", ML, y, { width: PW, align: "left" });
-    y += 24;
+    doc.fontSize(16).fillColor("#2E7D32")
+      .text(s.storeNameTh || s.storeName || "PharmaCare", ML, y, { width: L_COL_W });
+    y += 22;
 
     fn();
     doc.fontSize(9).fillColor("#555");
     const sinfo = [s.storeAddress, s.storePhone ? `โทร: ${s.storePhone}` : "", s.taxId ? `เลขประจำตัวผู้เสียภาษี: ${s.taxId}` : ""].filter(Boolean);
     for (const line of sinfo) {
-      doc.text(line, ML, y, { width: PW });
+      doc.text(line, ML, y, { width: L_COL_W });
       y += 13;
     }
-    y += 6;
 
-    // ═══════════════════════════════════════════════
-    //  ORDER REFERENCE — Below store info
-    // ═══════════════════════════════════════════════
-    const indent = 50; // 4cm ≈ 2 inches ≈ 50pt from left edge
-    const ol = ML + indent;
+    // ── CENTER: QR Code (1x1 inch, between left & right) ──
+    const refStartY = 40;
+    const qrUrl = `https://pharmacare-1783398975-production.up.railway.app/scan/${orderId}`;
+    try {
+      const qrBuffer = await QRCode.toBuffer(qrUrl, { width: 90, margin: 1 });
+      doc.image(qrBuffer, QR_X, refStartY + 5, { width: QR_SIZE, height: QR_SIZE });
+      fn();
+      doc.fontSize(6).fillColor("#999").text("สแกน QR", QR_X, refStartY + QR_SIZE + 6, { width: QR_SIZE, align: "center" });
+    } catch {}
 
+    // ── RIGHT: Order Reference (chิดขอบขวา) ──
     fn(true);
-    doc.fontSize(12).fillColor("#111827").text("ใบรายการสั่งซื้อ", ol, y);
-    y += 18;
+    doc.fontSize(12).fillColor("#111827")
+      .text("ใบรายการสั่งซื้อ", R_COL_L, refStartY, { width: R_COL_W, align: "right" });
+    let ry = refStartY + 18;
 
     fn();
     doc.fontSize(9).fillColor("#555");
@@ -88,7 +101,6 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
       packing: "กำลังแพ็ค", packed: "รอเข้ารับ", shipping: "กำลังจัดส่ง",
       cancelled: "ยกเลิก", delivered: "ส่งสำเร็จ",
     };
-
     const refs: [string, string][] = [
       ["เลขที่ออเดอร์:", order.orderNumber || `#${orderId}`],
       ["วันที่:", od.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })],
@@ -96,13 +108,13 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
       ["สถานะ:", statusLabels[order.status] || order.status],
     ];
     if (order.trackingNumber) refs.push(["เลขพัสดุ:", order.trackingNumber]);
-
-    const maxLabelW = Math.max(...refs.map(r => doc.widthOfString(r[0] + "  ")));
     for (const [label, value] of refs) {
-      doc.text(label, ol, y, { continued: true });
-      doc.text(" " + value);
-      y += 14;
+      doc.text(`${label} ${value}`, R_COL_L, ry, { width: R_COL_W, align: "right" });
+      ry += 14;
     }
+
+    // Set y to max of both columns
+    y = Math.max(y + 6, ry + 8);
 
     // ═══════════════════════════════════════════════
     //  SEPARATOR
@@ -186,18 +198,6 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     trow("ค่าจัดส่ง:", Number(order.shippingFee) === 0 ? "ฟรี" : `฿${Number(order.shippingFee).toFixed(2)}`);
     if (Number(order.tax || 0) > 0) trow("ภาษี:", `฿${Number(order.tax).toFixed(2)}`);
     trow("รวมทั้งสิ้น:", `฿${Number(order.grandTotal || 0).toFixed(2)}`, true);
-
-    // ═══════════════════════════════════════════════
-    //  QR CODE
-    // ═══════════════════════════════════════════════
-    const qrUrl = `https://pharmacare-1783398975-production.up.railway.app/scan/${orderId}`;
-    try {
-      const qrBuffer = await QRCode.toBuffer(qrUrl, { width: 100, margin: 1 });
-      const qrX = RE - 100;
-      doc.image(qrBuffer, qrX, ML, { width: 80, height: 80 });
-      fn();
-      doc.fontSize(7).fillColor("#999").text("สแกน QR", qrX, ML + 84, { width: 80, align: "center" });
-    } catch {}
 
     // ═══════════════════════════════════════════════
     //  FOOTER

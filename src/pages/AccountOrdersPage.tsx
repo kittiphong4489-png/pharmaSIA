@@ -116,18 +116,26 @@ export default function AccountOrdersPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {order.status === "pending" && (
-                          <button
-                            onClick={() => cancelOrder(order.id)}
-                            disabled={cancelling === order.id}
-                            className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 transition-all disabled:opacity-50"
-                          >
-                            {cancelling === order.id ? "กำลังยกเลิก..." : "ยกเลิก"}
-                          </button>
+                          <>
+                            <Link to={`/account/orders/${order.id}`}
+                              className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition-all font-medium">
+                              💳 จ่ายต่อ
+                            </Link>
+                            <button
+                              onClick={() => cancelOrder(order.id)}
+                              disabled={cancelling === order.id}
+                              className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 transition-all disabled:opacity-50"
+                            >
+                              {cancelling === order.id ? "กำลังยกเลิก..." : "ยกเลิก"}
+                            </button>
+                          </>
                         )}
-                        <Link to={`/account/orders/${order.id}`}
-                          className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-1">
-                          รายละเอียด <ChevronRight className="w-3 h-3" />
-                        </Link>
+                        {order.status !== "pending" && (
+                          <Link to={`/account/orders/${order.id}`}
+                            className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-1">
+                            รายละเอียด <ChevronRight className="w-3 h-3" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

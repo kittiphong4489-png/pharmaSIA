@@ -15,6 +15,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import AccountOrdersPage from "./pages/AccountOrdersPage";
+import AccountOrderDetailPage from "./pages/AccountOrderDetailPage";
 import AccountProfilePage from "./pages/AccountProfilePage";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerProductsPage from "./pages/SellerProductsPage";
@@ -85,6 +86,7 @@ export default function App() {
                 <Route path="/account" element={<AccountLayout />}>
                   <Route index element={<AccountDashboard />} />
                   <Route path="orders" element={<AccountOrdersPage />} />
+                  <Route path="orders/:id" element={<AccountOrderDetailPage />} />
                   <Route path="profile" element={<AccountProfilePage />} />
                 </Route>
                 <Route path="*" element={<NotFoundPage />} />

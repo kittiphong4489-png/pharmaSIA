@@ -3155,6 +3155,21 @@ app.get("/api/health", async (c) => {
   return c.json({ ok: true, ts: Date.now(), v: "pharmacare-v3-refactored" });
 });
 
+// ── Find order by phone + order number (public) ──
+app.post("/api/orders/find", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { orderNumber, phone } = body;
+    if (!orderNumber || !phone) return c.json({ error: "กรุณากรอกเลขที่ออเดอร์และเบอร์โทร" }, 400);
+    const db = getDb();
+    const order = db.prepare("SELECT id, orderNumber, customerName, grandTotal, status, sessionId, paymentMethod FROM orders WHERE orderNumber = ? AND customerPhone = ?").get(orderNumber, phone) as any;
+    if (!order) return c.json({ error: "ไม่พบออเดอร์นี้ กรุณาตรวจสอบเลขที่ออเดอร์และเบอร์โทร" }, 404);
+    return c.json({ success: true, order });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 // ── QR Scan page — สแกน QR จาก Invoice เพื่อดูออเดอร์ทันที ──
 app.get("/scan/:id", async (c) => {
   try {
