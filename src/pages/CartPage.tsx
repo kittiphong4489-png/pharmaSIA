@@ -136,6 +136,7 @@ export default function CartPage() {
                 method: "POST",
                 body: JSON.stringify({
                   label: form.addressLabel || "บ้าน",
+                  fullName: form.customerName,
                   address: form.address,
                   district: form.district,
                   province: form.province,
@@ -460,16 +461,27 @@ export default function CartPage() {
                 // Fetch saved addresses
                 const token = localStorage.getItem("pharma_token");
                 if (token) {
+                  // Load user profile for name auto-fill
+                  apiClient("/api/trpc/auth.me", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "0": { token } }),
+                  }).then((profileData: any) => {
+                    const user = profileData?.[0]?.result?.data?.user;
+                    if (user?.fullName) {
+                      setForm(prev => ({ ...prev, customerName: user.fullName }));
+                    }
+                  }).catch(() => {});
+                  // Load saved addresses
                   apiClient("/api/account/addresses")
                     .then(d => {
                       if (d.addresses?.length) {
                         setSavedAddresses(d.addresses);
-                        // Auto-select first
                         const first = d.addresses[0];
                         setSelectedAddressId(first.id);
                         setForm({
-                          customerName: form.customerName,
-                          customerPhone: first.phone || form.customerPhone,
+                          customerName: form.customerName || first.fullName || "",
+                          customerPhone: first.phone || form.customerPhone || "",
                           address: first.address || form.address,
                           district: first.district || form.district,
                           province: first.province || form.province,
