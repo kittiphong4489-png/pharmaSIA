@@ -31,7 +31,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     customerUser = db.prepare("SELECT fullName, phone, email FROM users WHERE id = ?").get(order.userId) as any;
   }
 
-  const doc = new PDFDocument({ margin: 50, size: "A4" });
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
   const buffers: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => buffers.push(chunk));
 
@@ -45,154 +45,166 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
       doc.registerFont("Thai-Italic", path.join(FONT_DIR, "Sarabun-Italic.ttf"));
     } catch {}
 
-    // ── Layout constants ──
-    const LM = 50;                 // left margin
-    const RM = 50;                 // right margin
-    const PW = doc.page.width - LM - RM;   // printable width (~495)
-    const RE = LM + PW;            // right edge of content (=LM+PW, ~545)
+    // ── Layout constants ──────────────────────────────────
+    const LM = 40;
+    const RM = 40;
+    const PW = doc.page.width - LM - RM;   // ~515
+    const RE = LM + PW;                    // ~555
+    const COL_MID = LM + PW * 0.5;         // 50% midpoint
+    const LEFT_END = COL_MID - 15;         // left col right edge
+    const RIGHT_START = COL_MID + 5;       // right col left edge
+    const RIGHT_W = RE - RIGHT_START;      // right col width
 
-    // Left column (store info)
-    const LC_W = 260;              // left column width
-    const LC_R = LM + LC_W;        // left column right edge (50+260=310)
+    let y = 40;
 
-    // Right column (order reference)
-    const RC_L = LC_R + 20;        // right column left edge (310+20=330)
-    const RC_W = RE - RC_L;        // right column width (~545-330=215)
+    // ── Default font ──
+    const useThai = () => { try { doc.font("Thai"); } catch {} };
+    const useThaiBold = () => { try { doc.font("Thai-Bold"); } catch {} };
 
-    // Table columns (within PW)
-    const T_NAME  = LM;            // product name start
-    const T_QTY   = LM + 240;     // qty start (290)
-    const T_PRICE = LM + 295;     // unit price start (345)
-    const T_TOTAL = LM + 365;     // total start (415)
-    const T_WIDTH = RE - T_TOTAL; // total column width (~545-415=130)
+    // ════════════════════════════════════════════════════════
+    //  HEADER: 2-COLUMN — Store (L) | Order Info (R)
+    // ════════════════════════════════════════════════════════
 
-    let y = 42;
+    // ── LEFT COLUMN: Store Info ──
+    useThaiBold();
+    doc.fontSize(16).fillColor("#2E7D32")
+      .text(s.storeNameTh || s.storeName || "PharmaCare", LM, y, { width: LEFT_END - LM });
+    y += 20;
 
-    // ══════════════════════════════════════════════
-    //  HEADER — Store Info (left column)
-    // ══════════════════════════════════════════════
-    doc.font("Thai-Bold").fontSize(20).fillColor("#1e40af")
-      .text(s.storeNameTh || s.storeName || "PharmaCare", LM, y, { width: LC_W });
-
-    y += 26;
-    doc.font("Thai").fontSize(9).fillColor("#6b7280");
-    const infoLines: string[] = [];
-    if (s.storeAddress) infoLines.push(s.storeAddress);
-    if (s.storePhone) infoLines.push(`โทร: ${s.storePhone}`);
-    if (s.storeEmail) infoLines.push(`อีเมล: ${s.storeEmail}`);
-    if (s.taxId) infoLines.push(`เลขประจำตัวผู้เสียภาษี: ${s.taxId}`);
-    for (const line of infoLines) {
-      doc.text(line, LM, y, { width: LC_W });
+    useThai();
+    doc.fontSize(9).fillColor("#555");
+    const storeLines: string[] = [];
+    if (s.storeAddress) storeLines.push(s.storeAddress);
+    if (s.storePhone) storeLines.push(`โทร: ${s.storePhone}`);
+    if (s.storeEmail) storeLines.push(`อีเมล: ${s.storeEmail}`);
+    if (s.taxId) storeLines.push(`เลขประจำตัวผู้เสียภาษี: ${s.taxId}`);
+    for (const line of storeLines) {
+      doc.text(line, LM, y, { width: LEFT_END - LM });
       y += 13;
     }
 
-    // ══════════════════════════════════════════════
-    //  RIGHT SIDE — Order Reference
-    // ══════════════════════════════════════════════
-    const refY = 42;
-    doc.font("Thai-Bold").fontSize(11).fillColor("#111827")
-      .text("ใบรายการสั่งซื้อ", RC_L, refY, { width: RC_W, align: "right" });
+    // ── RIGHT COLUMN: Order Reference (aligned right) ──
+    const refStartY = 40;
+    useThaiBold();
+    doc.fontSize(11).fillColor("#333")
+      .text("ใบรายการสั่งซื้อ", RIGHT_START, refStartY, { width: RIGHT_W, align: "right" });
 
-    doc.font("Thai").fontSize(9).fillColor("#374151");
-    let ry = refY + 20;
-    const refLineH = 14;
-    doc.text(`เลขที่ออเดอร์: ${order.orderNumber || `#${orderId}`}`, RC_L, ry, { width: RC_W, align: "right" });
-    ry += refLineH;
-    const orderDate = new Date(order.orderedAt || order.createdAt);
-    doc.text(`วันที่: ${orderDate.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })}`, RC_L, ry, { width: RC_W, align: "right" });
-    ry += refLineH;
-    doc.text(`เวลา: ${orderDate.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`, RC_L, ry, { width: RC_W, align: "right" });
-    ry += refLineH;
-    const statusLabels: Record<string, string> = {
-      pending: "รอจ่ายเงิน", paid: "จ่ายแล้ว", confirmed: "รออนุมัติ",
-      packing: "กำลังแพ็ค", packed: "รอเข้ารับ", shipping: "กำลังจัดส่ง",
-      cancelled: "ยกเลิก", delivered: "ส่งสำเร็จ",
-    };
-    doc.text(`สถานะ: ${statusLabels[order.status] || order.status}`, RC_L, ry, { width: RC_W, align: "right" });
-    ry += refLineH;
+    useThai();
+    doc.fontSize(9).fillColor("#555");
+    let ry = refStartY + 20;
+    const rh = 14;
+    doc.text(`เลขที่ออเดอร์: ${order.orderNumber || `#${orderId}`}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    const od = new Date(order.orderedAt || order.createdAt);
+    doc.text(`วันที่: ${od.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    doc.text(`เวลา: ${od.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    const sl: Record<string, string> = { pending: "รอจ่ายเงิน", paid: "จ่ายแล้ว", confirmed: "รออนุมัติ", packing: "กำลังแพ็ค", packed: "รอเข้ารับ", shipping: "กำลังจัดส่ง", cancelled: "ยกเลิก", delivered: "ส่งสำเร็จ" };
+    doc.text(`สถานะ: ${sl[order.status] || order.status}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
     if (order.trackingNumber) {
-      doc.text(`เลขพัสดุ: ${order.trackingNumber}`, RC_L, ry, { width: RC_W, align: "right" });
+      doc.text(`เลขพัสดุ: ${order.trackingNumber}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" });
     }
 
-    // ══════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════
     //  SEPARATOR
-    // ══════════════════════════════════════════════
-    y = Math.max(y + 6, 135);
-    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#e5e7eb").stroke();
+    // ════════════════════════════════════════════════════════
+    y = Math.max(y + 4, 130);
+    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#ddd").stroke();
     y += 14;
 
-    // ══════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════
     //  CUSTOMER INFO
-    // ══════════════════════════════════════════════
-    doc.font("Thai-Bold").fontSize(10).fillColor("#111827").text("ข้อมูลลูกค้า", LM, y);
-    y += 18;
-    doc.font("Thai").fontSize(9).fillColor("#374151");
-    doc.text(`ชื่อ: ${order.customerName || customerUser?.fullName || "-"}`, LM, y); y += 15;
-    doc.text(`โทร: ${order.customerPhone || customerUser?.phone || "-"}`, LM, y); y += 15;
-    if (customerUser?.email) { doc.text(`อีเมล: ${customerUser.email}`, LM, y); y += 15; }
-    const addrParts = [addr.address, addr.district, addr.province, addr.zip].filter(Boolean).join(" ");
-    if (addrParts) {
-      doc.text(`ที่อยู่: ${addrParts}`, LM, y, { width: PW }); y += 20;
+    // ════════════════════════════════════════════════════════
+    useThaiBold();
+    doc.fontSize(11).fillColor("#333").text("ข้อมูลลูกค้า", LM, y);
+    y += 17;
+    useThai();
+    doc.fontSize(9).fillColor("#555");
+    doc.text(`ชื่อ: ${order.customerName || customerUser?.fullName || "-"}`, LM, y); y += 14;
+    doc.text(`โทร: ${order.customerPhone || customerUser?.phone || "-"}`, LM, y); y += 14;
+    if (customerUser?.email) { doc.text(`อีเมล: ${customerUser.email}`, LM, y); y += 14; }
+    const ap = [addr.address, addr.district, addr.province, addr.zip].filter(Boolean).join(" ");
+    if (ap) {
+      doc.text(`ที่อยู่: ${ap}`, LM, y, { width: PW }); y += 18;
     }
 
-    // ══════════════════════════════════════════════
-    //  TABLE HEADER
-    // ══════════════════════════════════════════════
-    y += 4;
-    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#d1d5db").stroke(); y += 9;
-    doc.font("Thai-Bold").fontSize(9).fillColor("#1e40af");
-    doc.text("รายการสินค้า", T_NAME, y);
-    doc.text("จำนวน", T_QTY, y, { width: 40, align: "center" });
-    doc.text("ราคา/หน่วย", T_PRICE, y, { width: 70, align: "right" });
-    doc.text("รวมเงิน", T_TOTAL, y, { width: T_WIDTH - 8, align: "right" });
-    y += 17;
-    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#d1d5db").stroke(); y += 7;
+    // ════════════════════════════════════════════════════════
+    //  TABLE — Products
+    // ════════════════════════════════════════════════════════
+    // Column widths: name=fills remaining, qty=60, unitPrice=80, total=80
+    const TOT_W = 80;
+    const PRICE_W = 80;
+    const QTY_W = 60;
+    const NAME_W = PW - QTY_W - PRICE_W - TOT_W;
+    const T_QTY = LM + NAME_W;
+    const T_PRICE = T_QTY + QTY_W;
+    const T_TOTAL = T_PRICE + PRICE_W;
 
-    // ══════════════════════════════════════════════
-    //  ITEMS
-    // ══════════════════════════════════════════════
-    doc.font("Thai").fontSize(9).fillColor("#374151");
+    y += 6;
+    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#ccc").stroke(); y += 9;
+    useThaiBold();
+    doc.fontSize(9).fillColor("#2E7D32");
+    doc.text("รายการสินค้า", LM, y);
+    doc.text("จำนวน", T_QTY, y, { width: QTY_W, align: "right" });
+    doc.text("ราคา/หน่วย", T_PRICE, y, { width: PRICE_W, align: "right" });
+    doc.text("รวม", T_TOTAL, y, { width: TOT_W, align: "right" });
+    y += 16;
+    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#ccc").stroke(); y += 7;
+
+    useThai();
+    doc.fontSize(9).fillColor("#444");
     for (const item of items) {
-      const name = (item.productNameTh || item.productNameEn || "สินค้า").substring(0, 80);
-      doc.text(name, T_NAME, y, { width: T_QTY - T_NAME - 6 });
-      doc.text(String(item.quantity || 1), T_QTY, y, { width: 40, align: "center" });
-      doc.text(`฿${Number(item.unitPrice).toFixed(2)}`, T_PRICE, y, { width: 70, align: "right" });
-      doc.text(`฿${(item.subtotal || item.unitPrice * item.quantity).toFixed(2)}`, T_TOTAL, y, { width: T_WIDTH - 8, align: "right" });
-      y += 17;
+      const nm = (item.productNameTh || item.productNameEn || "สินค้า").substring(0, 80);
+      doc.text(nm, LM, y, { width: NAME_W - 6 });
+      doc.text(String(item.quantity || 1), T_QTY, y, { width: QTY_W, align: "right" });
+      doc.text(`฿${Number(item.unitPrice).toFixed(2)}`, T_PRICE, y, { width: PRICE_W, align: "right" });
+      doc.text(`฿${(item.subtotal || item.unitPrice * item.quantity).toFixed(2)}`, T_TOTAL, y, { width: TOT_W, align: "right" });
+      y += 16;
       if (y > 700) { doc.addPage(); y = 50; }
     }
 
-    // ══════════════════════════════════════════════
-    //  TOTALS
-    // ══════════════════════════════════════════════
-    y += 10;
-    const totL = RE - 180;   // totals label start (545-180=365)
-    const totV = RE - 70;    // totals value start (545-70=475)
-    const totW = 65;         // totals value width
-    doc.moveTo(totL, y).lineTo(RE, y).strokeColor("#e5e7eb").stroke(); y += 11;
-    doc.font("Thai").fontSize(10).fillColor("#374151");
-    doc.text("ยอดสินค้า:", totL, y); doc.text(`฿${Number(order.subtotal || 0).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
-    doc.text("ค่าจัดส่ง:", totL, y); doc.text(Number(order.shippingFee) === 0 ? "ฟรี" : `฿${Number(order.shippingFee).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
-    if (Number(order.tax || 0) > 0) {
-      doc.text("ภาษี:", totL, y); doc.text(`฿${Number(order.tax).toFixed(2)}`, totV, y, { width: totW, align: "right" }); y += 19;
-    }
-    doc.font("Thai-Bold").fontSize(14).fillColor("#1e40af");
-    doc.text("รวมทั้งสิ้น:", totL, y); doc.text(`฿${Number(order.grandTotal || 0).toFixed(2)}`, totV, y, { width: totW + 5, align: "right" }); y += 30;
+    // ════════════════════════════════════════════════════════
+    //  TOTALS — Right-aligned, no border table style
+    // ════════════════════════════════════════════════════════
+    y += 12;
+    const TL = RE - 200;     // totals label start (right side)
+    const TV = TL + 130;     // totals value start
+    doc.moveTo(TL, y).lineTo(RE, y).strokeColor("#ddd").stroke(); y += 10;
 
-    // ══════════════════════════════════════════════
+    useThai();
+    doc.fontSize(10).fillColor("#444");
+    const rowH = 18;
+    const renderRow = (label: string, value: string, bold = false) => {
+      if (bold) {
+        useThaiBold();
+        doc.fontSize(14).fillColor("#2E7D32");
+      } else {
+        useThai();
+        doc.fontSize(10).fillColor("#444");
+      }
+      doc.text(label, TL, y, { width: TV - TL - 5 });
+      doc.text(value, TV, y, { width: RE - TV - 5, align: "right" });
+      y += rowH;
+    };
+
+    renderRow("ยอดสินค้า:", `฿${Number(order.subtotal || 0).toFixed(2)}`);
+    renderRow("ค่าจัดส่ง:", Number(order.shippingFee) === 0 ? "ฟรี" : `฿${Number(order.shippingFee).toFixed(2)}`);
+    if (Number(order.tax || 0) > 0) {
+      renderRow("ภาษี:", `฿${Number(order.tax).toFixed(2)}`);
+    }
+    renderRow("รวมทั้งสิ้น:", `฿${Number(order.grandTotal || 0).toFixed(2)}`, true);
+
+    // ════════════════════════════════════════════════════════
     //  FOOTER
-    // ══════════════════════════════════════════════
-    y = Math.max(y, 725);
-    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#e5e7eb").stroke(); y += 12;
-    doc.font("Thai").fontSize(8.5).fillColor("#9ca3af");
-    doc.text(s.footer || "ขอบคุณที่ใช้บริการ", LM, y, { align: "center", width: PW }); y += 16;
-    const contactParts = [
-      s.storePhone ? `โทร: ${s.storePhone}` : "",
-      s.lineId ? `LINE: ${s.lineId}` : "",
-      s.storeEmail ? `อีเมล: ${s.storeEmail}` : "",
-    ].filter(Boolean);
-    if (contactParts.length > 0) {
-      doc.text(contactParts.join(" | "), LM, y, { align: "center", width: PW });
+    // ════════════════════════════════════════════════════════
+    y = Math.max(y + 5, 725);
+    doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#ddd").stroke(); y += 12;
+    useThaiBold();
+    doc.fontSize(11).fillColor("#777").text(s.footer || "ขอบคุณที่ใช้บริการ", LM, y, { align: "center", width: PW });
+    y += 16;
+    useThai();
+    doc.fontSize(9).fillColor("#999");
+    const cp = [s.storePhone ? `โทร: ${s.storePhone}` : "", s.lineId ? `LINE: ${s.lineId}` : "", s.storeEmail ? `อีเมล: ${s.storeEmail}` : ""].filter(Boolean);
+    if (cp.length > 0) {
+      doc.text(cp.join(" | "), LM, y, { align: "center", width: PW });
     }
     doc.end();
   });
