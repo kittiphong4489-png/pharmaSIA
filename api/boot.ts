@@ -140,6 +140,33 @@ app.put("/api/categories/:id", async (c) => {
   }
 });
 
+// ── Bulk update product categories (admin only, one-time migration) ──
+app.post("/api/categories/bulk-update", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const payload = await verifyToken(token);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json();
+    const { mapping } = body;
+    if (!mapping || typeof mapping !== 'object') return c.json({ error: "Missing mapping object" }, 400);
+    const db = getDb();
+    let updated = 0;
+    const stmt = db.prepare("UPDATE products SET categoryId = ? WHERE id = ?");
+    const tx = db.transaction((entries: any) => {
+      for (const [productId, categoryId] of Object.entries(entries)) {
+        stmt.run(categoryId, parseInt(productId));
+        updated++;
+      }
+    });
+    tx(mapping);
+    return c.json({ success: true, updated });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 // ── Delete category ──
 app.delete("/api/categories/:id", async (c) => {
   try {
