@@ -493,6 +493,48 @@ app.get("/api/orders", async (c) => {
   }
 });
 
+// ── Cancel order (customer) ──
+app.post("/api/orders/:id/cancel", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as any;
+    if (!order) return c.json({ error: "Order not found" }, 404);
+
+    // Verify ownership
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const sessionId = c.req.header("X-Session-ID") || c.req.query("sessionId") || "";
+    const { verifyToken } = await import("./lib/auth");
+    const payload = token ? await verifyToken(token) : null;
+    
+    if (payload) {
+      const user = db.prepare("SELECT role FROM users WHERE id = ?").get(payload.userId) as any;
+      if (!user) return c.json({ error: "Unauthorized" }, 401);
+      // Admin/Seller can cancel any order
+      if (user.role !== "SELLER" && user.role !== "ADMIN" && order.userId && order.userId !== payload.userId) {
+        return c.json({ error: "Forbidden" }, 403);
+      }
+    } else {
+      // Guest: check sessionId
+      if (!order.sessionId || order.sessionId !== sessionId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+    }
+
+    // Only allow cancel if status is pending or paid
+    if (order.status !== "pending" && order.status !== "paid") {
+      return c.json({ error: "ไม่สามารถยกเลิกออเดอร์นี้ได้ (สถานะ: " + order.status + ")" }, 400);
+    }
+
+    db.prepare("UPDATE orders SET status = 'cancelled', updatedAt = datetime('now') WHERE id = ?").run(id);
+    return c.json({ success: true, message: "ยกเลิกออเดอร์สำเร็จ" });
+  } catch (e: any) {
+    const db = getDb(); await logApiError(c, db, "cancel_order", "data", null, e);
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 app.get("/api/orders/:id", async (c) => {
   try {
     const auth = c.req.header("authorization") || "";
