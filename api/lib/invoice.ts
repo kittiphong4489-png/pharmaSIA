@@ -41,9 +41,9 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     doc.on("error", reject);
 
     try {
-      doc.registerFont("Thai", path.join(FONT_DIR, "Sarabun-Regular.ttf"));
-      doc.registerFont("Thai-Bold", path.join(FONT_DIR, "Sarabun-Bold.ttf"));
-      doc.registerFont("Thai-Italic", path.join(FONT_DIR, "Sarabun-Italic.ttf"));
+      doc.registerFont("Thai", path.join(FONT_DIR, "NotoSansThai.ttf"));
+      doc.registerFont("Thai-Bold", path.join(FONT_DIR, "NotoSansThai.ttf"));
+      doc.registerFont("Thai-Italic", path.join(FONT_DIR, "NotoSansThai.ttf"));
     } catch {}
 
     // ── Layout constants ──────────────────────────────────
