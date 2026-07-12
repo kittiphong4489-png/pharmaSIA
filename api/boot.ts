@@ -3694,6 +3694,28 @@ if (env.isProduction) {
       }
       db.prepare("UPDATE categories SET isActive=0 WHERE id=6").run();
       db.prepare("UPDATE products SET categoryId=4 WHERE categoryId=6").run();
+      // Re-categorize products: ยาอันตราย
+      const dangerous = [
+        'amoxicillin','amoxi','cloxacillin','cephalexin','cepha','cef-','ceftriaxone',
+        'azithromycin','clindamycin','gentamicin','chloramphenicol','tetracycline','doxycycline',
+        'metronidazole','norfloxacin','ciprofloxacin','ofloxacin',
+        'glibenclamide','metformin','glipizide','insulin',
+        'amlodipine','enalapril','losartan','simvastatin','atorvastatin',
+        'warfarin','clopidogrel','furosemide','spironolactone',
+        'prednisolone','dexamethasone','levothyroxine',
+        'salbutamol','ventolin','pulmicort',
+        'omeprazole','pantoprazole','tramadol','codeine',
+        'gabapentin','pregabalin','diazepam','lorazepam',
+        'haloperidol','risperidone','phenytoin','phenobarbital',
+        'sildenafil','tadalafil','finasteride',
+        'ketoconazole','fluconazole','acyclovir',
+        'diclofenac','piroxicam','meloxicam','colchicine','allopurinol',
+        'methotrexate','azathioprine',
+      ];
+      for (const drug of dangerous) {
+        db.prepare("UPDATE products SET categoryId=11 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ? OR LOWER(genericNameTh) LIKE ?)")
+          .run(`%${drug}%`,`%${drug}%`,`%${drug}%`);
+      }
       console.log("[Migration] ✅ หมวดหมู่พร้อม");
     }
   } catch (e: any) { console.error("[Migration]", e?.message); }
