@@ -98,6 +98,64 @@ app.get("/api/categories", async (c) => {
   }
 });
 
+// ── Create category ──
+app.post("/api/categories", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const payload = await verifyToken(token);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json();
+    const db = getDb();
+    const result = db.prepare("INSERT INTO categories (nameTh, nameEn, slug, icon, color, sortOrder) VALUES (?, ?, ?, ?, ?, ?)").run(
+      body.nameTh || "", body.nameEn || "", body.slug || "", body.icon || "📦", body.color || "gray", body.sortOrder || 99
+    );
+    return c.json({ success: true, id: result.lastInsertRowid });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Update category ──
+app.put("/api/categories/:id", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const payload = await verifyToken(token);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const db = getDb();
+    db.prepare("UPDATE categories SET nameTh = ?, nameEn = ?, slug = ?, icon = ?, color = ?, sortOrder = ? WHERE id = ?").run(
+      body.nameTh || "", body.nameEn || "", body.slug || "", body.icon || "📦", body.color || "gray", body.sortOrder || 99, id
+    );
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Delete category ──
+app.delete("/api/categories/:id", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const payload = await verifyToken(token);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    // Move products to "อื่นๆ/รอจัด" (category 10) before deleting
+    db.prepare("UPDATE products SET categoryId = 10 WHERE categoryId = ?").run(id);
+    db.prepare("UPDATE categories SET isActive = 0 WHERE id = ?").run(id);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 app.get("/api/products", async (c) => {
   try {
     const search = c.req.query("search") || "";
@@ -109,7 +167,7 @@ app.get("/api/products", async (c) => {
     const sort = c.req.query("sort") || "default";
     const db = getDb();
 
-    let sql = "SELECT * FROM products WHERE 1=1";
+    let sql = "SELECT p.*, c.nameTh as categoryNameTh FROM products p LEFT JOIN categories c ON p.categoryId = c.id WHERE 1=1";
     const params: any[] = [];
 
     // Smart multi-field search

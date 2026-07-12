@@ -10,9 +10,13 @@ export default function SellerProductsPage() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, status: "active" });
+  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, status: "active", categoryId: 1 });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+
+  // Category management
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [catForm, setCatForm] = useState({ nameTh: "", nameEn: "", slug: "", icon: "📦", color: "blue" });
 
   const loadProducts = () => {
     setLoading(true);
@@ -33,14 +37,13 @@ export default function SellerProductsPage() {
 
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
-    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn, price: p.price, stock: p.stock, status: p.status });
+    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn, price: p.price, stock: p.stock, status: p.status, categoryId: p.categoryId || 1 });
   };
 
   const handleSave = async () => {
     if (!editingId) return;
     setSaving(true);
     setMsg("");
-    const token = localStorage.getItem("pharma_token");
     try {
       const data = await apiClient(`/api/products/${editingId}`, {
         method: "PUT",
@@ -62,22 +65,42 @@ export default function SellerProductsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("ยืนยันลบสินค้านี้?")) return;
     try {
-      const token = localStorage.getItem("pharma_token");
-      await apiClient(`/api/products/${id}`, { method: "DELETE", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      await apiClient(`/api/products/${id}`, { method: "DELETE" });
       loadProducts();
     } catch {}
   };
 
+  const handleAddCategory = async () => {
+    if (!catForm.nameTh) { alert("กรุณากรอกชื่อหมวดหมู่"); return; }
+    try {
+      const data = await apiClient("/api/categories", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(catForm),
+      });
+      if (data.success) {
+        setShowCatModal(false);
+        setCatForm({ nameTh: "", nameEn: "", slug: "", icon: "📦", color: "blue" });
+        setMsg("✅ เพิ่มหมวดหมู่สำเร็จ");
+        loadProducts();
+      }
+    } catch {}
+  };
+
+  const catColors = ["blue","green","amber","pink","teal","purple","orange","slate","yellow","gray","red","indigo","cyan","rose"];
+  const catIcons = ["📦","💊","🌿","✨","🧴","🩺","👶","🧹","☕","🐾","💄","🧪","🛡️","🎯"];
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-900">จัดการสินค้า</h1>
+        <div className="flex items-center gap-8">
+          <button onClick={() => setShowCatModal(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 font-medium flex items-center gap-1">
+            ➕ เพิ่มหมวดหมู่
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">จัดการสินค้า</h1>
+        </div>
         <div className="flex items-center gap-2">
-          <a
-            href="/api/export/products.csv"
-            onClick={(e) => { e.preventDefault(); window.open("/api/export/products.csv", "_blank"); }}
-            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700"
-          >
+          <a onClick={(e) => { e.preventDefault(); window.open("/api/export/products.csv", "_blank"); }}
+            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 cursor-pointer">
             📥 Export CSV
           </a>
           <span className="text-sm text-gray-400">{products.length} รายการ</span>
@@ -92,7 +115,7 @@ export default function SellerProductsPage() {
         <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
           <option value="">ทั้งหมด</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.nameTh}</option>)}
+          {categories.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.nameTh} ({c.productCount})</option>)}
         </select>
         <button onClick={loadProducts} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
           ค้นหา
@@ -113,6 +136,7 @@ export default function SellerProductsPage() {
               <tr className="border-b border-gray-200 text-left text-gray-500">
                 <th className="pb-3 font-medium">SKU</th>
                 <th className="pb-3 font-medium">ชื่อสินค้า</th>
+                <th className="pb-3 font-medium">หมวดหมู่</th>
                 <th className="pb-3 font-medium">ราคา</th>
                 <th className="pb-3 font-medium">สต็อก</th>
                 <th className="pb-3 font-medium">สถานะ</th>
@@ -120,25 +144,31 @@ export default function SellerProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {products.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
                   {editingId === p.id ? (
                     <>
                       <td className="py-3 text-gray-400">{p.sku}</td>
                       <td className="py-3">
-                        <input value={editForm.nameTh} onChange={(e) => setEditForm({ ...editForm, nameTh: e.target.value })}
+                        <input value={editForm.nameTh} onChange={(e) => setEditForm({...editForm, nameTh: e.target.value})}
                           className="w-full px-2 py-1 border rounded text-sm" />
                       </td>
                       <td className="py-3">
-                        <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: parseFloat(e.target.value) || 0 })}
+                        <select value={editForm.categoryId} onChange={(e) => setEditForm({...editForm, categoryId: parseInt(e.target.value)})}
+                          className="px-2 py-1 border rounded text-sm">
+                          {categories.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.nameTh}</option>)}
+                        </select>
+                      </td>
+                      <td className="py-3">
+                        <input type="number" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: parseFloat(e.target.value) || 0})}
                           className="w-24 px-2 py-1 border rounded text-sm" />
                       </td>
                       <td className="py-3">
-                        <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: parseInt(e.target.value) || 0 })}
+                        <input type="number" value={editForm.stock} onChange={(e) => setEditForm({...editForm, stock: parseInt(e.target.value) || 0})}
                           className="w-20 px-2 py-1 border rounded text-sm" />
                       </td>
                       <td className="py-3">
-                        <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                        <select value={editForm.status} onChange={(e) => setEditForm({...editForm, status: e.target.value})}
                           className="px-2 py-1 border rounded text-sm">
                           <option value="active">ขาย</option>
                           <option value="inactive">หยุด</option>
@@ -155,6 +185,11 @@ export default function SellerProductsPage() {
                     <>
                       <td className="py-3 text-gray-400 font-mono text-xs">{p.sku}</td>
                       <td className="py-3 font-medium">{p.nameTh}</td>
+                      <td className="py-3">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                          {p.categoryNameTh || (categories.find((c: any) => c.id === p.categoryId)?.nameTh) || "อื่นๆ"}
+                        </span>
+                      </td>
                       <td className="py-3 text-blue-600 font-medium">฿{p.price}</td>
                       <td className="py-3">{p.stock}</td>
                       <td className="py-3">
@@ -174,6 +209,37 @@ export default function SellerProductsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {showCatModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowCatModal(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold mb-4">เพิ่มหมวดหมู่ใหม่</h2>
+            <div className="space-y-3">
+              <input placeholder="ชื่อไทย (เช่น ยา)" value={catForm.nameTh}
+                onChange={(e) => setCatForm({...catForm, nameTh: e.target.value, slug: e.target.value.replace(/\s/g, '')})}
+                className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <input placeholder="ชื่ออังกฤษ (เช่น Medicine)" value={catForm.nameEn}
+                onChange={(e) => setCatForm({...catForm, nameEn: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <div className="flex gap-3">
+                <select value={catForm.icon} onChange={(e) => setCatForm({...catForm, icon: e.target.value})}
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm">
+                  {catIcons.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                </select>
+                <select value={catForm.color} onChange={(e) => setCatForm({...catForm, color: e.target.value})}
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm">
+                  {catColors.map(cl => <option key={cl} value={cl}>{cl}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={handleAddCategory} className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700">✅ เพิ่ม</button>
+              <button onClick={() => setShowCatModal(false)} className="flex-1 py-2.5 bg-gray-100 rounded-xl font-medium hover:bg-gray-200">ยกเลิก</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
