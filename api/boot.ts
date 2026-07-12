@@ -285,7 +285,7 @@ app.delete("/api/products/:id", async (c) => {
 // ── Cart API ──
 app.get("/api/cart", async (c) => {
   try {
-    const sessionId = c.req.query("sessionId") || "default";
+    const sessionId = c.req.header("X-Session-ID") || c.req.query("sessionId") || "default";
     const db = getDb();
     // Cleanup sessions older than 7 days
     db.prepare("DELETE FROM cart_items WHERE createdAt < datetime('now', '-7 days')").run();
@@ -304,7 +304,7 @@ app.post("/api/cart/add", async (c) => {
   try {
     const body = await c.req.json();
     const db = getDb();
-    const sessionId = body.sessionId || "default";
+    const sessionId = c.req.header("X-Session-ID") || body.sessionId || "default";
     const existing = db.prepare("SELECT id, quantity FROM cart_items WHERE sessionId = ? AND productId = ?").get(sessionId, body.productId) as any;
     if (existing) {
       db.prepare("UPDATE cart_items SET quantity = quantity + ? WHERE id = ?").run(body.quantity || 1, existing.id);
