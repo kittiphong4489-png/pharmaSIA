@@ -106,6 +106,13 @@ export default function CartPage() {
   };
 
   const placeOrder = async () => {
+    // Check if logged in
+    const token = localStorage.getItem("pharma_token");
+    if (!token) {
+      alert("⚠️ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ");
+      window.location.href = "/login?redirect=/cart";
+      return;
+    }
     if (!form.customerName || !form.customerPhone || !form.address || !form.province || !form.zip) { alert("กรุณากรอกข้อมูลที่อยู่จัดส่งให้ครบถ้วน"); return; }
     if (selectedList.length === 0) { alert("กรุณาเลือกสินค้าที่ต้องการสั่งซื้อ"); return; }
     setOrdering(true);

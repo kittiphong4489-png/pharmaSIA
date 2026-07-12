@@ -8,6 +8,9 @@ export default function LoginPage() {
   const { login, register, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
+  // Get redirect URL from query params
+  const params = new URLSearchParams(window.location.search);
+  const redirectTo = params.get("redirect") || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -78,7 +81,7 @@ export default function LoginPage() {
         ? await login(email, password)
         : await register(email, password, name, phone, tier, taxId, address, extraName, extraPhone);
       if (result.success) {
-        navigate("/");
+        navigate(redirectTo);
       } else {
         setError(result.error || "เกิดข้อผิดพลาด");
       }
