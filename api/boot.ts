@@ -3449,6 +3449,23 @@ app.use("/api/trpc/*", async (c) => {
 // ── SSE Events Stream ──
 
 if (env.isProduction) {
+  // ── Admin password reset (one-time use for Railway) ──
+  app.post("/api/reset-admin-pw", async (c) => {
+    try {
+      const { getDb } = await import("./queries/connection");
+      const { hashPassword } = await import("./lib/auth");
+      const { newPassword, secret } = await c.req.json();
+      if (secret !== "pharmacia-reset-2026") return c.json({ error: "Invalid secret" }, 403);
+      const hashed = hashPassword(newPassword);
+      const db = getDb();
+      db.prepare("UPDATE users SET passwordHash = ? WHERE role = 'SELLER' OR role = 'ADMIN'").run(hashed);
+      const users = db.prepare("SELECT id, email, role FROM users WHERE role = 'SELLER' OR role = 'ADMIN'").all();
+      return c.json({ success: true, updated: users.length, users: users.map((u: any) => ({ email: u.email, role: u.role })) });
+    } catch (e: any) {
+      return c.json({ error: e?.message }, 500);
+    }
+  });
+
   const { serve } = await import("@hono/node-server");
   const { serveStaticFiles } = await import("./lib/vite");
 
