@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
+import Pagination from "../components/Pagination";
 
 const SORT_OPTIONS = [
   { value: "default", label: "ค่าเริ่มต้น" },
@@ -119,38 +120,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
-              <button disabled={page <= 1} onClick={() => updateFilter("page", String(page - 1))}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed">
-                ← ก่อนหน้า
-              </button>
-              {(() => {
-                const pages: (number | string)[] = [];
-                const start = Math.max(1, page - 2);
-                const end = Math.min(totalPages, start + 4);
-                if (start > 1) { pages.push(1); pages.push('...'); }
-                for (let p = start; p <= end; p++) pages.push(p);
-                if (end < totalPages) { pages.push('...'); pages.push(totalPages); }
-                return pages.map((p, idx) =>
-                  p === '...' ? (
-                    <span key={`dot-${idx}`} className="px-1 text-gray-400 select-none">...</span>
-                  ) : (
-                    <button key={p} onClick={() => updateFilter("page", String(p))}
-                      className={`w-10 h-10 rounded-xl text-sm font-medium transition-all ${
-                        p === page ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-50 border border-gray-200"
-                      }`}>
-                      {p}
-                    </button>
-                  )
-                );
-              })()}
-              <button disabled={page >= totalPages} onClick={() => updateFilter("page", String(page + 1))}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed">
-                ถัดไป →
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onChange={(p) => updateFilter("page", String(p))} />
         </>
       )}
     </div>

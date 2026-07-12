@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../lib/api";
 import { Link } from "react-router-dom";
+import Pagination from "../components/Pagination";
 
 interface Customer {
   id: number;
@@ -319,27 +320,7 @@ export default function CustomerListPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    ← ก่อนหน้า
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    หน้า {page} จาก {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    ถัดไป →
-                  </button>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </>
           )}
         </div>

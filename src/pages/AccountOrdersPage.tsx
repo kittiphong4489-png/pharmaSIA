@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getSessionId } from "../lib/session";
 import { Package, Clock, CheckCircle, XCircle, Truck, CreditCard, ChevronRight, FileText } from "lucide-react";
 import { apiClient } from "../lib/api";
+import Pagination from "../components/Pagination";
 
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string }> = {
   pending: { label: "รอจ่ายเงิน", icon: Clock, color: "text-amber-500" },
@@ -163,39 +164,7 @@ export default function AccountOrdersPage() {
           </div>
 
           {/* Pagination - responsive */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                ← ก่อนหน้า
-              </button>
-              <div className="flex gap-1 overflow-x-auto max-w-[60vw]">
-                {Array.from({length: Math.min(totalPages, 20)}).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i + 1)}
-                    className={`w-9 h-9 text-sm rounded-lg font-medium transition-all flex-shrink-0 ${
-                      page === i + 1
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                ถัดไป →
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </>
       )}
     </div>
