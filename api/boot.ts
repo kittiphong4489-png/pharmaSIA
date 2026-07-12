@@ -232,8 +232,21 @@ app.get("/api/products", async (c) => {
     };
     sql += ` ORDER BY ${sortMap[sort] || "id DESC"}`;
 
-    const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as total");
-    const { total } = db.prepare(countSql).get(...params) as any;
+    // Fix: count query using proper SELECT COUNT
+    let countSql = "SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.categoryId = c.id WHERE 1=1";
+    const countParams: any[] = [];
+    if (search) {
+      const terms = search.trim().split(/\\s+/).filter(Boolean);
+      for (const term of terms) {
+        const q = `%${term}%`;
+        countSql += " AND (nameTh LIKE ? OR nameEn LIKE ? OR genericNameTh LIKE ? OR sku LIKE ? OR descriptionTh LIKE ?)";
+        countParams.push(q, q, q, q, q);
+      }
+    }
+    if (categoryId) { countSql += " AND categoryId = ?"; countParams.push(parseInt(categoryId)); }
+    if (minPrice) { countSql += " AND price >= ?"; countParams.push(parseFloat(minPrice)); }
+    if (maxPrice) { countSql += " AND price <= ?"; countParams.push(parseFloat(maxPrice)); }
+    const { total } = db.prepare(countSql).get(...countParams) as any;
 
     const offset = (page - 1) * limit;
     sql += " LIMIT ? OFFSET ?";
