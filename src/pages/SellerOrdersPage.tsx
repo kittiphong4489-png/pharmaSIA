@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../lib/api";
+import Pagination from "../components/Pagination";
 
 interface Order {
   id: number;
@@ -42,6 +43,8 @@ export default function SellerOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [updating, setUpdating] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   // Tracking modal state
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<number | null>(null);
@@ -55,14 +58,14 @@ export default function SellerOrdersPage() {
 
   const loadOrders = () => {
     setLoading(true);
-    const params = new URLSearchParams({ limit: "50" });
+    const params = new URLSearchParams({ limit: "50", page: String(page) });
     if (statusFilter) params.set("status", statusFilter);
     apiClient(`/api/seller/orders?${params}`)
-      .then((data) => { setOrders(data.orders || []); setLoading(false); })
+      .then(d => { setOrders(d.orders || []); setTotalPages(d.totalPages || 1); setLoading(false); })
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadOrders(); }, [statusFilter]);
+  useEffect(() => { loadOrders(); }, [statusFilter, page]);
 
   const updateStatus = async (id: number, status: string) => {
     setUpdating(id);
@@ -136,7 +139,7 @@ export default function SellerOrdersPage() {
       {/* Filter */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {["", "pending", "paid", "confirmed", "packing", "packed", "shipping", "cancelled"].map((s) => (
-          <button key={s} onClick={() => setStatusFilter(s)}
+          <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }}
             className={`px-3 py-1.5 rounded-lg text-sm ${statusFilter === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {s ? STATUS_MAP[s] : "ทั้งหมด"}
           </button>
@@ -289,6 +292,9 @@ export default function SellerOrdersPage() {
               </div>
             </div>
           </div>
+
+          {/* Pagination */}
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </div>
       )}
     </div>
