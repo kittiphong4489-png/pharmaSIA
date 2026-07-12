@@ -3676,6 +3676,28 @@ if (env.isProduction) {
   });
 
   const { serve } = await import("@hono/node-server");
+  // ── Auto-category migration: ป้องกันหมวดหมู่ถูกรีเซ็ต ──
+  try {
+    const db = getDb();
+    const cat1 = db.prepare("SELECT id, nameTh FROM categories WHERE id = 1").get() as any;
+    if (cat1 && cat1.nameTh === "ยา") {
+      console.log("[Migration] จัดการหมวดหมู่...");
+      const cats = [
+        [1,"ยาสามัญประจำบ้าน","💊","blue",1],[2,"ยาแผนโบราณ/สมุนไพร","🌿","green",2],
+        [3,"อาหารเสริม/วิตามิน","✨","amber",3],[4,"เวชสำอาง+แม่และเด็ก","🧴","pink",4],
+        [5,"เวชภัณฑ์/อุปกรณ์การแพทย์","🩺","teal",5],[7,"ของใช้ทั่วไป","🧹","slate",6],
+        [8,"เครื่องดื่ม/อาหาร","☕","orange",7],[11,"ยาอันตราย","💊","red",8],
+        [9,"สัตว์เลี้ยง","🐾","yellow",9],
+      ];
+      for (const [id, name, icon, color, sort] of cats) {
+        db.prepare("UPDATE categories SET nameTh=?, icon=?, color=?, sortOrder=?, isActive=1 WHERE id=?").run(name, icon, color, sort, id);
+      }
+      db.prepare("UPDATE categories SET isActive=0 WHERE id=6").run();
+      db.prepare("UPDATE products SET categoryId=4 WHERE categoryId=6").run();
+      console.log("[Migration] ✅ หมวดหมู่พร้อม");
+    }
+  } catch (e: any) { console.error("[Migration]", e?.message); }
+
   const { serveStaticFiles } = await import("./lib/vite");
 
   // ── Telegram callback webhook ──
