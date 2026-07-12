@@ -1094,8 +1094,11 @@ app.get("/api/seller/pricing", async (c) => {
       const enriched = products.map((p: any) => {
         let profit = (p.price || 0) - (p.costPrice || 0);
         let unitPricing = {};
+        let pricesJson: any = {};
         try { unitPricing = JSON.parse(p.unitPricingJson || '{}'); } catch {}
-        return { ...p, profit, unitPricing };
+        try { pricesJson = JSON.parse(p.pricesJson || '{}'); } catch {}
+        const wholesalePrice = pricesJson.wholesale || 0;
+        return { ...p, profit, unitPricing, wholesalePrice };
       });
       const hasCost = enriched.some((p: any) => (p.costPrice || 0) > 0) ? 1 : 0;
       return { categoryId: cat.id, categoryName: cat.nameTh, count: enriched.length, hasCost, products: enriched };
@@ -2534,9 +2537,23 @@ app.post("/api/shipping/calculate", async (c) => {
     const rate = db.prepare("SELECT * FROM shipping_rates WHERE minWeight <= ? AND maxWeight >= ? ORDER BY fee ASC LIMIT 1").get(totalWeight, totalWeight) as any;
     let fee = rate ? rate.fee : 50;
 
-    // Promotion: 50% off when subtotal >= 500
-    if (subtotal >= 500) {
-      fee = Math.ceil(fee / 2);
+    // Get shipping settings from DB
+    const settingsRows = db.prepare("SELECT key, value FROM store_settings WHERE key LIKE 'shipping_%'").all() as any[];
+    const ss: Record<string, string> = {};
+    for (const row of settingsRows) ss[row.key] = row.value;
+    
+    const promoThreshold = parseFloat(ss.shipping_promo_threshold || "500");
+    const promoDiscount = parseFloat(ss.shipping_promo_discount || "50");
+    const freeThreshold = parseFloat(ss.shipping_free_threshold || "999999");
+
+    // Promotion: discount when subtotal >= threshold
+    if (subtotal >= promoThreshold && subtotal < freeThreshold) {
+      fee = Math.max(0, fee - (fee * promoDiscount / 100));
+    }
+    
+    // Free shipping on big orders
+    if (subtotal >= freeThreshold) {
+      fee = 0;
     }
 
     return c.json({
@@ -2547,6 +2564,82 @@ app.post("/api/shipping/calculate", async (c) => {
       rateName: rate?.name || "default",
       promotion: subtotal >= 500 ? "ลด 50% เมื่อสั่งครบ 500฿" : null,
     });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Get all shipping rates ──
+app.get("/api/shipping/rates", async (c) => {
+  try {
+    const db = getDb();
+    const rates = db.prepare("SELECT * FROM shipping_rates ORDER BY minWeight").all();
+    return c.json({ success: true, rates });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Update shipping rate ──
+app.put("/api/shipping/rates/:id", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const db = getDb();
+    db.prepare("UPDATE shipping_rates SET name = ?, minWeight = ?, maxWeight = ?, fee = ? WHERE id = ?").run(
+      body.name || "", body.minWeight || 0, body.maxWeight || 999999, body.fee || 0, id
+    );
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Add shipping rate ──
+app.post("/api/shipping/rates", async (c) => {
+  try {
+    const body = await c.req.json();
+    const db = getDb();
+    const r = db.prepare("INSERT INTO shipping_rates (name, minWeight, maxWeight, fee) VALUES (?, ?, ?, ?)").run(
+      body.name || "", body.minWeight || 0, body.maxWeight || 999999, body.fee || 0
+    );
+    return c.json({ success: true, id: r.lastInsertRowid });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Delete shipping rate ──
+app.delete("/api/shipping/rates/:id", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    db.prepare("DELETE FROM shipping_rates WHERE id = ?").run(id);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
+// ── Save shipping settings (free threshold, promo) ──
+app.put("/api/shipping/settings", async (c) => {
+  try {
+    const body = await c.req.json();
+    const db = getDb();
+    const settings = [
+      ["shipping_free_threshold", String(body.freeThreshold || 0)],
+      ["shipping_promo_threshold", String(body.promoThreshold || 0)],
+      ["shipping_promo_discount", String(body.promoDiscount || 0)],
+    ];
+    for (const [key, value] of settings) {
+      const existing = db.prepare("SELECT id FROM store_settings WHERE key = ?").get(key);
+      if (existing) {
+        db.prepare("UPDATE store_settings SET value = ?, updatedAt = datetime('now') WHERE key = ?").run(value, key);
+      } else {
+        db.prepare("INSERT INTO store_settings (key, value) VALUES (?, ?)").run(key, value);
+      }
+    }
+    return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e?.message }, 500);
   }
