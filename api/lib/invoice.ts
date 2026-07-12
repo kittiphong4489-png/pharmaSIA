@@ -41,8 +41,10 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     doc.on("error", reject);
 
     // Register Thai font (fallback silently)
-    try { doc.registerFont("Thai", path.join(FONT_DIR, "THSarabun.ttf")); } catch {}
-    try { doc.registerFont("Thai-Bold", path.join(FONT_DIR, "THSarabunBold.ttf")); } catch {}
+    try { doc.registerFont("Thai", path.join(FONT_DIR, "NotoSansThai.ttf")); } catch {}
+    try { doc.registerFont("Thai-Bold", path.join(FONT_DIR, "NotoSansThai.ttf")); } catch {}
+    // Also try THSarabun as fallback
+    try { doc.registerFont("ThaiB", path.join(FONT_DIR, "THSarabun.ttf")); } catch {}
 
     const fn = (bold = false) => { try { doc.font(bold ? "Thai-Bold" : "Thai"); } catch {} };
 
@@ -60,10 +62,9 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     const L_COL_W = PW * 0.38;       // left col ~38%
     const R_COL_W = PW * 0.38;       // right col ~38%
     const QR_X = ML + L_COL_W + (PW - L_COL_W - R_COL_W - QR_SIZE) / 2;  // centered between
-    const R_COL_R = RE;              // right col flush to right edge
-    const R_COL_L = R_COL_R - R_COL_W;  // right col left edge
-
-    // ── LEFT: Store Info ──
+    // ── RIGHT: Order Reference (ติดกับ QR, เว้น 1cm) ──
+    const GAP_1CM = 28;              // ~1cm ≈ 28pt
+    const R_RIGHT = QR_X + QR_SIZE + GAP_1CM;
     fn(true);
     doc.fontSize(16).fillColor("#2E7D32")
       .text(s.storeNameTh || s.storeName || "PharmaCare", ML, y, { width: L_COL_W });
@@ -90,7 +91,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     // ── RIGHT: Order Reference (chิดขอบขวา) ──
     fn(true);
     doc.fontSize(12).fillColor("#111827")
-      .text("ใบรายการสั่งซื้อ", R_COL_L, refStartY, { width: R_COL_W, align: "right" });
+      .text("ใบรายการสั่งซื้อ", R_RIGHT, refStartY, { width: R_COL_W, align: "right" });
     let ry = refStartY + 18;
 
     fn();
@@ -109,7 +110,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     ];
     if (order.trackingNumber) refs.push(["เลขพัสดุ:", order.trackingNumber]);
     for (const [label, value] of refs) {
-      doc.text(`${label} ${value}`, R_COL_L, ry, { width: R_COL_W, align: "right" });
+      doc.text(`${label} ${value}`, R_RIGHT, ry, { width: R_COL_W, align: "right" });
       ry += 14;
     }
 
