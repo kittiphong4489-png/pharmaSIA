@@ -3101,7 +3101,92 @@ app.get("/api/health", async (c) => {
   return c.json({ ok: true, ts: Date.now(), v: "pharmacare-v3-refactored" });
 });
 
-// ── POS (Point of Sale) — quick order without address ──
+// ── QR Scan page — สแกน QR จาก Invoice เพื่อดูออเดอร์ทันที ──
+app.get("/scan/:id", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as any;
+    if (!order) return c.html("<html><body style='font-family:sans-serif;text-align:center;padding:40px'><h2>⛔ ไม่พบออเดอร์นี้</h2><a href='/' style='color:#1565c0'>กลับหน้าแรก</a></body></html>");
+    
+    const items = db.prepare("SELECT * FROM order_items WHERE orderId = ?").all(id) as any[];
+    const statusLabels: Record<string, string> = {
+      pending: "รอจ่ายเงิน", paid: "จ่ายแล้ว", confirmed: "รออนุมัติ",
+      packing: "กำลังแพ็ค", packed: "รอเข้ารับ", shipping: "กำลังจัดส่ง",
+      cancelled: "ยกเลิก", delivered: "ส่งสำเร็จ",
+    };
+    
+    let itemRows = items.map((it: any) =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${it.productNameTh || it.productNameEn || "สินค้า"}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${it.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">฿${Number(it.unitPrice).toFixed(2)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">฿${(it.subtotal || 0).toFixed(2)}</td></tr>`
+    ).join("");
+    
+    const statusClass = order.status === "confirmed" || order.status === "packing" ? "highlight" : order.status;
+    
+    return c.html(`<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สแกนออเดอร์ #${order.orderNumber}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f0;padding:16px}
+.card{background:white;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+h1{font-size:22px;color:#2E7D32}
+h2{font-size:15px;color:#666;margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:6px 8px;background:#f5f5f5;font-size:12px;color:#666}
+td{padding:6px 8px;border-bottom:1px solid #f0f0f0}
+.l{color:#888;font-size:12px;margin-top:8px}
+.v{font-size:16px;font-weight:600;color:#222}
+.b{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#e8f5e9;color:#2E7D32}
+.tot{text-align:right;font-size:18px;font-weight:700;color:#1b5e20;margin-top:10px}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;margin-top:10px}
+.g{background:#2E7D32;color:white}
+.b{background:#1565c0;color:white}
+.gr{background:#e0e0e0;color:#333}
+.highlight{background:#fff8e1;border:2px solid #ffd54f}
+</style></head>
+<body>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div><h1>📦 #${order.orderNumber || "#" + id}</h1><h2>${order.customerName || "-"}</h2></div>
+    <div class="b">${statusLabels[order.status] || order.status}</div>
+  </div>
+  <div class="l">โทร</div><div class="v">${order.customerPhone || "-"}</div>
+  <div class="l">ที่อยู่</div><div class="v" style="font-size:13px;font-weight:400">${(()=>{try{return JSON.parse(order.shippingAddressJson||'{}').address||"-"}catch{return "-"}})()}</div>
+</div>
+<div class="card">
+  <table><tr><th>สินค้า</th><th style="text-align:center;width:50px">จำนวน</th><th style="text-align:right;width:70px">ราคา</th><th style="text-align:right;width:70px">รวม</th></tr>
+  ${itemRows || ""}</table>
+  <div class="tot">฿${Number(order.grandTotal || 0).toFixed(2)}</div>
+</div>
+${order.status === "confirmed" ? `<a href="/scan/${id}/pack" class="btn g">📦 เริ่มแพ็คออเดอร์นี้</a>` : ""}
+${order.status === "packing" ? `<a href="/scan/${id}/packed" class="btn b">📦✅ แพ็คเสร็จแล้ว</a>` : ""}
+<a href="/seller/orders" class="btn gr">ดูออเดอร์ทั้งหมด</a>
+</body></html>`);
+  } catch (e: any) {
+    return c.html("<html><body style='font-family:sans-serif;text-align:center;padding:40px'><h2>⛔ Error</h2><p>"+e.message+"</p></body></html>");
+  }
+});
+
+app.get("/scan/:id/pack", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    db.prepare("UPDATE orders SET status = 'packing', updatedAt = datetime('now') WHERE id = ? AND status = 'confirmed'").run(id);
+    return c.redirect(`/scan/${id}`);
+  } catch { return c.redirect(`/scan/${id}`); }
+});
+
+app.get("/scan/:id/packed", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const db = getDb();
+    db.prepare("UPDATE orders SET status = 'packed', packedAt = datetime('now'), updatedAt = datetime('now') WHERE id = ? AND status = 'packing'").run(id);
+    return c.redirect(`/scan/${id}`);
+  } catch { return c.redirect(`/scan/${id}`); }
+});
+
+// ── POS (Point of Sale)// ── POS (Point of Sale) — quick order without address ──
 app.post("/api/pos/order", async (c) => {
   try {
     const payload = await requireAdmin(c);

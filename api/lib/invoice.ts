@@ -5,6 +5,7 @@ import PDFDocument from "pdfkit";
 import { getDb } from "../queries/connection";
 import path from "path";
 import { fileURLToPath } from "url";
+import QRCode from "qrcode";
 
 const __dirname_esm = typeof __dirname !== "undefined"
   ? __dirname
@@ -35,7 +36,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
   const buffers: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => buffers.push(chunk));
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.on("error", reject);
 
@@ -47,30 +48,31 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
 
     // ── Layout constants ──────────────────────────────────
     const LM = 40;
-    const RM = 40;
-    const PW = doc.page.width - LM - RM;   // ~515
-    const RE = LM + PW;                    // ~555
-    const COL_MID = LM + PW * 0.5;         // 50% midpoint
-    const LEFT_END = COL_MID - 15;         // left col right edge
-    const RIGHT_START = COL_MID + 5;       // right col left edge
-    const RIGHT_W = RE - RIGHT_START;      // right col width
+    const RM = 45;                 // เพิ่มเผื่อขวา
+    const PW = doc.page.width - LM - RM - 10;  // safety buffer 10px
+    const RE = LM + PW;            // ~540 (แทน 555)
+    const COL_MID = LM + PW * 0.5;
+    const LEFT_END = COL_MID - 20;
+    const RIGHT_START = COL_MID + 10;
+    const RIGHT_W = RE - RIGHT_START - 8;  // safety margin 8px
 
-    let y = 40;
+    let y = 32;
 
     // ── Default font ──
     const useThai = () => { try { doc.font("Thai"); } catch {} };
     const useThaiBold = () => { try { doc.font("Thai-Bold"); } catch {} };
 
     // ════════════════════════════════════════════════════════
-    //  HEADER: 2-COLUMN — Store (L) | Order Info (R)
+    //  HEADER: Store name (top) | Order info (below, 4cm indent)
     // ════════════════════════════════════════════════════════
 
-    // ── LEFT COLUMN: Store Info ──
+    // ── Store Name (moved up 0.5cm = ~14pt) ──
     useThaiBold();
     doc.fontSize(16).fillColor("#2E7D32")
-      .text(s.storeNameTh || s.storeName || "PharmaCare", LM, y, { width: LEFT_END - LM });
+      .text(s.storeNameTh || s.storeName || "PharmaCare", LM, y, { width: PW });
     y += 20;
 
+    // ── Store Details ──
     useThai();
     doc.fontSize(9).fillColor("#555");
     const storeLines: string[] = [];
@@ -79,34 +81,35 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     if (s.storeEmail) storeLines.push(`อีเมล: ${s.storeEmail}`);
     if (s.taxId) storeLines.push(`เลขประจำตัวผู้เสียภาษี: ${s.taxId}`);
     for (const line of storeLines) {
-      doc.text(line, LM, y, { width: LEFT_END - LM });
+      doc.text(line, LM, y, { width: PW });
       y += 13;
     }
+    y += 4;
 
-    // ── RIGHT COLUMN: Order Reference (aligned right) ──
-    const refStartY = 40;
+    // ── Order Reference (indent 4cm = ~113pt from left) ──
+    const INDENT = 113;  // 4cm in points
+    const REF_LEFT = LM + INDENT;
     useThaiBold();
     doc.fontSize(11).fillColor("#333")
-      .text("ใบรายการสั่งซื้อ", RIGHT_START, refStartY, { width: RIGHT_W, align: "right" });
-
+      .text("ใบรายการสั่งซื้อ", REF_LEFT, y);
+    y += 18;
     useThai();
     doc.fontSize(9).fillColor("#555");
-    let ry = refStartY + 20;
-    const rh = 14;
-    doc.text(`เลขที่ออเดอร์: ${order.orderNumber || `#${orderId}`}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    const refLineH = 14;
+    doc.text(`เลขที่ออเดอร์: ${order.orderNumber || `#${orderId}`}`, REF_LEFT, y); y += refLineH;
     const od = new Date(order.orderedAt || order.createdAt);
-    doc.text(`วันที่: ${od.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
-    doc.text(`เวลา: ${od.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    doc.text(`วันที่: ${od.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })}`, REF_LEFT, y); y += refLineH;
+    doc.text(`เวลา: ${od.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`, REF_LEFT, y); y += refLineH;
     const sl: Record<string, string> = { pending: "รอจ่ายเงิน", paid: "จ่ายแล้ว", confirmed: "รออนุมัติ", packing: "กำลังแพ็ค", packed: "รอเข้ารับ", shipping: "กำลังจัดส่ง", cancelled: "ยกเลิก", delivered: "ส่งสำเร็จ" };
-    doc.text(`สถานะ: ${sl[order.status] || order.status}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" }); ry += rh;
+    doc.text(`สถานะ: ${sl[order.status] || order.status}`, REF_LEFT, y); y += refLineH;
     if (order.trackingNumber) {
-      doc.text(`เลขพัสดุ: ${order.trackingNumber}`, RIGHT_START, ry, { width: RIGHT_W, align: "right" });
+      doc.text(`เลขพัสดุ: ${order.trackingNumber}`, REF_LEFT, y);
     }
 
     // ════════════════════════════════════════════════════════
     //  SEPARATOR
     // ════════════════════════════════════════════════════════
-    y = Math.max(y + 4, 130);
+    y = Math.max(y + 6, 140);
     doc.moveTo(LM, y).lineTo(RE, y).strokeColor("#ddd").stroke();
     y += 14;
 
@@ -127,13 +130,26 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     }
 
     // ════════════════════════════════════════════════════════
+    //  QR CODE — สแกนเพื่อดูออเดอร์
+    // ════════════════════════════════════════════════════════
+    const qrUrl = `https://pharmacare-1783398975-production.up.railway.app/scan/${orderId}`;
+    try {
+      const qrBuffer = await QRCode.toBuffer(qrUrl, { width: 120, margin: 1 });
+      const qrX = RE - 130;
+      doc.image(qrBuffer, qrX, y - 30, { width: 110, height: 110 });
+      useThai();
+      doc.fontSize(7).fillColor("#999")
+        .text("สแกน QR เพื่อดูออเดอร์", qrX, y + 85, { width: 110, align: "center" });
+    } catch {}
+
+    // ════════════════════════════════════════════════════════
     //  TABLE — Products
     // ════════════════════════════════════════════════════════
     // Column widths: name=fills remaining, qty=60, unitPrice=80, total=80
-    const TOT_W = 80;
-    const PRICE_W = 80;
-    const QTY_W = 60;
-    const NAME_W = PW - QTY_W - PRICE_W - TOT_W;
+    const TOT_W = 75;
+    const PRICE_W = 75;
+    const QTY_W = 55;
+    const NAME_W = PW - QTY_W - PRICE_W - TOT_W - 10;
     const T_QTY = LM + NAME_W;
     const T_PRICE = T_QTY + QTY_W;
     const T_TOTAL = T_PRICE + PRICE_W;
@@ -165,8 +181,8 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     //  TOTALS — Right-aligned, no border table style
     // ════════════════════════════════════════════════════════
     y += 12;
-    const TL = RE - 200;     // totals label start (right side)
-    const TV = TL + 130;     // totals value start
+    const TL = RE - 190;     // totals label start (shorter)
+    const TV = TL + 125;     // totals value start
     doc.moveTo(TL, y).lineTo(RE, y).strokeColor("#ddd").stroke(); y += 10;
 
     useThai();
