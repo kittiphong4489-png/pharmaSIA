@@ -21,6 +21,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import SellerProductsPage from "./pages/SellerProductsPage";
 import SellerOrdersPage from "./pages/SellerOrdersPage";
 import SellerSettingsPage from "./pages/SellerSettingsPage";
+import SellerCategoriesPage from "./pages/SellerCategoriesPage";
 import SalesReportsPage from "./pages/SalesReportsPage";
 import SellerPricingPage from "./pages/SellerPricingPage";
 import SellerBatchesPage from "./pages/SellerBatchesPage";
@@ -70,6 +71,7 @@ export default function App() {
                 <Route path="/seller/reports" element={<SellerRoute><SalesReportsPage /></SellerRoute>} />
                 <Route path="/seller/pricing" element={<SellerRoute><SellerPricingPage /></SellerRoute>} />
                 <Route path="/seller/batches" element={<SellerRoute><SellerBatchesPage /></SellerRoute>} />
+                <Route path="/seller/categories" element={<SellerRoute><SellerCategoriesPage /></SellerRoute>} />
                 <Route path="/seller/traceability" element={<SellerRoute><TraceabilityPage /></SellerRoute>} />
                 <Route path="/seller/pos" element={<SellerRoute><PosPage /></SellerRoute>} />
                 <Route path="/seller/customers" element={<SellerRoute><CustomerListPage /></SellerRoute>} />
