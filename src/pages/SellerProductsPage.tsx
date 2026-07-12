@@ -9,6 +9,8 @@ export default function SellerProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, status: "active", categoryId: 1 });
   const [saving, setSaving] = useState(false);
@@ -20,7 +22,7 @@ export default function SellerProductsPage() {
 
   const loadProducts = () => {
     setLoading(true);
-    const params = new URLSearchParams({ limit: "50" });
+    const params = new URLSearchParams({ limit: "50", page: String(page) });
     if (catFilter) params.set("categoryId", catFilter);
     if (search) params.set("search", search);
     Promise.all([
@@ -28,12 +30,13 @@ export default function SellerProductsPage() {
       apiClient("/api/categories"),
     ]).then(([data, cats]) => {
       setProducts(data.items || []);
+      setTotalPages(data.totalPages || 1);
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadProducts(); }, [catFilter]);
+  useEffect(() => { loadProducts(); }, [catFilter, page]);
 
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
@@ -209,6 +212,21 @@ export default function SellerProductsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            ← ก่อนหน้า
+          </button>
+          <span className="text-sm text-gray-500">หน้า {page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            ถัดไป →
+          </button>
         </div>
       )}
 
