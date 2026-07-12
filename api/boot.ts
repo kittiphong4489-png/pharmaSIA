@@ -621,21 +621,7 @@ app.get("/api/orders/:id/invoice", async (c) => {
     const db = getDb();
     const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as any;
     if (!order) return c.json({ error: "Order not found" }, 404);
-    // Allow guest with matching sessionId
-    if (!payload) {
-      if (sessionId && order.sessionId === sessionId) {
-        // Guest access via sessionId — allow
-      } else {
-        return new Response('{"error":"Unauthorized"}', { status: 401, headers: { "Content-Type": "application/json" } });
-      }
-    } else {
-      // Check role first: admin/seller can view any invoice
-      const user = db.prepare("SELECT role FROM users WHERE id = ?").get(payload.userId) as any;
-      const role = user?.role || "";
-      if (role !== "SELLER" && role !== "ADMIN" && order.userId && order.userId !== payload.userId) {
-        return c.json({ error: "Forbidden" }, 403);
-      }
-    }
+    // Public access — เปิดให้ทุกคนดู Invoice ได้ (QR Code บน Invoice ต้องใช้ได้)
     const { generateInvoicePdf } = await import("./lib/invoice");
     const pdf = await generateInvoicePdf(id);
     return c.body(new Uint8Array(pdf), 200, {
