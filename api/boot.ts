@@ -2273,7 +2273,7 @@ app.get("/api/payments/qr/:paymentId", async (c) => {
 app.post("/api/payments/create", async (c) => {
   try {
     const body = await c.req.json();
-    const { orderId, sessionId } = body;
+    const { orderId } = body;
     if (!orderId || orderId <= 0) return c.json({ error: "หมายเลขออเดอร์ไม่ถูกต้อง" }, 400);
     const db = getDb();
     const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId) as any;
@@ -2281,17 +2281,17 @@ app.post("/api/payments/create", async (c) => {
 
     // Verify ownership: logged-in user or matching sessionId
     const auth = c.req.header("authorization") || "";
+    const sessionId = c.req.header("X-Session-ID") || c.req.query("sessionId") || "";
     const token = auth.replace("Bearer ", "");
     const { verifyToken } = await import("./lib/auth");
     const payload = token ? await verifyToken(token) : null;
-    if (!payload && !(body.sessionId && order.sessionId === body.sessionId)) {
-      // For guest orders, allow if sessionId matches
-      if (!body.sessionId || !order.sessionId || order.sessionId !== body.sessionId) {
+    if (!payload) {
+      // Guest: check sessionId
+      if (!sessionId || !order.sessionId || order.sessionId !== sessionId) {
         return new Response('{"error":"Unauthorized"}', { status: 401, headers: { "Content-Type": "application/json" } });
       }
-    }
-    // Logged-in user: check if order belongs to them
-    if (payload && order.userId && order.userId !== payload.userId) {
+    } else if (order.userId && order.userId !== payload.userId) {
+      // Logged-in: check role
       const user = db.prepare("SELECT role FROM users WHERE id = ?").get(payload.userId) as any;
       if (user?.role !== "SELLER" && user?.role !== "ADMIN") {
         return c.json({ error: "Forbidden" }, 403);
