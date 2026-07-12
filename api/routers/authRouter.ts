@@ -146,4 +146,37 @@ export const authRouter = createRouter({
 
       return { success: true, user };
     }),
+
+  // ── Update profile ──
+  updateProfile: publicMutation
+    .input(z.object({
+      token: z.string().min(1),
+      fullName: z.string().min(1).optional(),
+      phone: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const payload = await verifyToken(input.token);
+      if (!payload) return { success: false, error: "Token ไม่ถูกต้องหรือหมดอายุ" };
+
+      const db = getDb();
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (input.fullName !== undefined) {
+        updates.push("fullName = ?");
+        values.push(input.fullName);
+      }
+      if (input.phone !== undefined) {
+        updates.push("phone = ?");
+        values.push(input.phone);
+      }
+
+      if (updates.length === 0) return { success: false, error: "ไม่มีข้อมูลที่ต้องการแก้ไข" };
+
+      values.push(payload.userId);
+      db.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+
+      const user = db.prepare("SELECT id, fullName, email, phone, role, tier FROM users WHERE id = ?").get(payload.userId) as any;
+      return { success: true, user };
+    }),
 });
