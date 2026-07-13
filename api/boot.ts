@@ -3324,6 +3324,75 @@ app.post("/api/line/notify", async (c) => {
   }
 });
 
+// ── Promotions API ──
+app.get("/api/promotions", async (c) => {
+  try {
+    const db = getDb();
+    const items = db.prepare("SELECT * FROM promotions ORDER BY id DESC").all();
+    return c.json({ items });
+  } catch (e: any) { return c.json({ items: [], error: e?.message }, 500); }
+});
+
+app.post("/api/promotions", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const payload = await verifyToken(auth.replace("Bearer ", ""));
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json();
+    if (!body.code || !body.type) return c.json({ error: "Missing code or type" }, 400);
+    const db = getDb();
+    db.prepare("INSERT INTO promotions (code, nameTh, description, type, value, minOrder, maxDiscount, usageLimit, isActive) VALUES (?,?,?,?,?,?,?,?,1)").run(
+      body.code.toUpperCase(), body.nameTh||"", body.description||"", body.type, body.value||0, body.minOrder||0, body.maxDiscount||0, body.usageLimit||0
+    );
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ error: e?.message }, 500); }
+});
+
+app.put("/api/promotions/:id", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const payload = await verifyToken(auth.replace("Bearer ", ""));
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const db = getDb();
+    db.prepare("UPDATE promotions SET code=?, nameTh=?, description=?, type=?, value=?, minOrder=?, maxDiscount=?, usageLimit=?, isActive=?, updatedAt=datetime('now') WHERE id=?").run(
+      body.code?.toUpperCase()||"", body.nameTh||"", body.description||"", body.type||"percentage", body.value||0, body.minOrder||0, body.maxDiscount||0, body.usageLimit||0, body.isActive??1, id
+    );
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ error: e?.message }, 500); }
+});
+
+app.delete("/api/promotions/:id", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const payload = await verifyToken(auth.replace("Bearer ", ""));
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const db = getDb();
+    db.prepare("DELETE FROM promotions WHERE id=?").run(parseInt(c.req.param("id")));
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ error: e?.message }, 500); }
+});
+
+app.post("/api/promotions/validate", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { code, subtotal } = body;
+    if (!code) return c.json({ valid: false, error: "กรุณาระบุโค้ด" });
+    const db = getDb();
+    const promo = db.prepare("SELECT * FROM promotions WHERE code=? AND isActive=1").get(code.toUpperCase()) as any;
+    if (!promo) return c.json({ valid: false, error: "โค้ดส่วนลดไม่ถูกต้อง" });
+    if (promo.usageLimit > 0 && promo.usedCount >= promo.usageLimit) return c.json({ valid: false, error: "โค้ดหมดอายุการใช้งาน" });
+    if (promo.minOrder > 0 && (subtotal||0) < promo.minOrder) return c.json({ valid: false, error: `ยอดขั้นต่ำ ${promo.minOrder} บาท` });
+    let discount = promo.type === "percentage" ? (subtotal||0) * promo.value / 100 : promo.value;
+    if (promo.maxDiscount > 0 && discount > promo.maxDiscount) discount = promo.maxDiscount;
+    return c.json({ valid: true, promo: { ...promo, discount } });
+  } catch (e: any) { return c.json({ valid: false, error: e?.message }); }
+});
+
 // ── Supplier API ──
 // GET /api/suppliers — รายชื่อผู้จัดจำหน่าย (ดึงจาก stock_batches)
 app.get("/api/suppliers", async (c) => {
