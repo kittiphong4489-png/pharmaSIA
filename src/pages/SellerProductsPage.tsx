@@ -17,6 +17,10 @@ export default function SellerProductsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
+  // Add product
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, sku: "" });
+
   // Category management
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState({ nameTh: "", nameEn: "", slug: "", icon: "📦", color: "blue" });
@@ -72,6 +76,20 @@ export default function SellerProductsPage() {
       await apiClient(`/api/products/${id}`, { method: "DELETE" });
       loadProducts();
     } catch {}
+  }
+
+  const addProduct = async () => {
+    if (!addForm.nameTh) { alert("กรุณากรอกชื่อสินค้า"); return; }
+    setSaving(true);
+    try {
+      const data = await apiClient("/api/products", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...addForm, categoryId: 1, status: "active" }),
+      });
+      if (data.success) { setShowAdd(false); setAddForm({ nameTh: "", nameEn: "", price: 0, stock: 0, sku: "" }); setMsg("✅ เพิ่มสินค้าแล้ว"); loadProducts(); }
+      else { setMsg("❌ " + (data.error || "Error")); }
+    } catch { setMsg("❌ เกิดข้อผิดพลาด"); }
+    setSaving(false);
   };
 
   const handleAddCategory = async () => {
@@ -103,6 +121,10 @@ export default function SellerProductsPage() {
           <h1 className="text-xl font-bold text-gray-900">จัดการสินค้า</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowAdd(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-medium flex items-center gap-1">
+            ➕ เพิ่มสินค้า
+          </button>
           <a onClick={(e) => { e.preventDefault(); window.open("/api/export/products.csv", "_blank"); }}
             className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 cursor-pointer">
             📥 Export CSV
@@ -245,6 +267,30 @@ export default function SellerProductsPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={handleAddCategory} className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700">✅ เพิ่ม</button>
               <button onClick={() => setShowCatModal(false)} className="flex-1 py-2.5 bg-gray-100 rounded-xl font-medium hover:bg-gray-200">ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Product Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold mb-4">เพิ่มสินค้าใหม่</h2>
+            <div className="space-y-3">
+              <input placeholder="SKU (ถ้ามี)" value={addForm.sku} onChange={(e) => setAddForm({...addForm, sku: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <input placeholder="ชื่อสินค้า (ไทย) *" value={addForm.nameTh} onChange={(e) => setAddForm({...addForm, nameTh: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <input placeholder="ชื่อสินค้า (อังกฤษ)" value={addForm.nameEn} onChange={(e) => setAddForm({...addForm, nameEn: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-gray-500">ราคา</label>
+                  <input type="number" value={addForm.price} onChange={(e) => setAddForm({...addForm, price: +e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+                <div><label className="text-xs text-gray-500">สต็อก</label>
+                  <input type="number" value={addForm.stock} onChange={(e) => setAddForm({...addForm, stock: +e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={addProduct} disabled={saving} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50">✅ {saving ? "กำลังเพิ่ม..." : "เพิ่มสินค้า"}</button>
+              <button onClick={() => setShowAdd(false)} className="flex-1 py-2.5 bg-gray-100 rounded-xl font-medium hover:bg-gray-200">ยกเลิก</button>
             </div>
           </div>
         </div>
