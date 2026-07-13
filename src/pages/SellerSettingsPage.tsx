@@ -94,6 +94,9 @@ export default function SellerSettingsPage() {
     { key: "footer", label: "ข้อความท้ายใบเสร็จ", type: "text" },
   ];
 
+  const [lineToken, setLineToken] = useState("");
+  const [lineStatus, setLineStatus] = useState<"loading"|"ok"|"missing">("loading");
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-xl font-bold text-gray-900 mb-2">ตั้งค่าร้านค้า</h1>
@@ -134,6 +137,45 @@ export default function SellerSettingsPage() {
           className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50">
           {saving ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
         </button>
+      </div>
+
+      {/* LINE Notify Section */}
+      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-2">📢 แจ้งเตือน LINE</h2>
+        <p className="text-sm text-gray-500 mb-4">รับแจ้งเตือนเมื่อมีออเดอร์ใหม่ผ่าน LINE Notify</p>
+        
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">LINE Notify Token</label>
+            <input type="password" value={lineToken} onChange={(e) => setLineToken(e.target.value)}
+              placeholder="กรอก LINE Notify Token" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+          </div>
+          
+          <button onClick={async () => {
+            if (!lineToken) { alert("กรุณากรอก LINE Notify Token"); return; }
+            try {
+              const d = await apiClient("/api/settings", {
+                method: "PUT", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lineNotifyToken: lineToken }),
+              });
+              if (d.success) alert("✅ ตั้งค่า LINE Notify แล้ว");
+              else alert("❌ " + (d.error || "Error"));
+            } catch { alert("เกิดข้อผิดพลาด"); }
+          }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+            ตั้งค่า LINE Notify
+          </button>
+
+          <details className="text-xs text-gray-500 mt-3">
+            <summary className="cursor-pointer text-blue-600 hover:underline">วิธีขอ Token</summary>
+            <ol className="mt-2 space-y-1 pl-4 list-decimal">
+              <li>ไปที่ <a href="https://notify-bot.line.me/" target="_blank" rel="noreferrer" className="text-blue-600 underline">notify-bot.line.me</a></li>
+              <li>Login ด้วย LINE ของคุณ</li>
+              <li>ไปที่ "My Page" → "Generate token"</li>
+              <li>เลือกห้อง/กลุ่มที่ต้องการรับแจ้งเตือน</li>
+              <li>Copy Token มาใส่ด้านบน</li>
+            </ol>
+          </details>
+        </div>
       </div>
     </div>
   );
