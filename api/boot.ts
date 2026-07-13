@@ -3608,6 +3608,38 @@ app.get("/api/admin/users", async (c) => {
   } catch (e: any) { return c.json({ users: [], error: e?.message }, 500); }
 });
 
+// ── Create new admin user ──
+app.post("/api/admin/users", async (c) => {
+  try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json();
+    if (!body.email || !body.password || !body.fullName) return c.json({ error: "กรุณากรอกชื่อ อีเมล และรหัสผ่าน" }, 400);
+    const { hashPassword } = await import("./lib/auth");
+    const hashed = hashPassword(body.password);
+    const db = getDb();
+    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(body.email);
+    if (existing) return c.json({ error: "อีเมลนี้ถูกใช้แล้ว" }, 400);
+    const r = db.prepare("INSERT INTO users (fullName, email, phone, passwordHash, role, isActive) VALUES (?, ?, ?, ?, ?, 1)").run(
+      body.fullName, body.email, body.phone || "", hashed, body.role || "SELLER"
+    );
+    return c.json({ success: true, id: r.lastInsertRowid });
+  } catch (e: any) { return c.json({ error: e?.message }, 500); }
+});
+
+// ── Delete / disable admin user ──
+app.delete("/api/admin/users/:id", async (c) => {
+  try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const id = parseInt(c.req.param("id"));
+    if (payload.userId === id) return c.json({ error: "ไม่สามารถลบบัญชีตัวเองได้" }, 400);
+    const db = getDb();
+    db.prepare("UPDATE users SET isActive = 0, role = 'INDIVIDUAL' WHERE id = ? AND role IN ('SUPER_ADMIN','SELLER','ADMIN')").run(id);
+    return c.json({ success: true, message: "ลบผู้ดูแลระบบแล้ว" });
+  } catch (e: any) { return c.json({ error: e?.message }, 500); }
+});
+
 app.put("/api/admin/users/:id/role", async (c) => {
   try {
     const payload = await requireAdmin(c);
