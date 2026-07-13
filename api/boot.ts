@@ -140,6 +140,54 @@ app.put("/api/categories/:id", async (c) => {
   }
 });
 
+// ── Sync products from Forte (by SKU, preserves categories) ──
+app.post("/api/products/sync", async (c) => {
+  try {
+    const { verifyToken } = await import("./lib/auth");
+    const auth = c.req.header("authorization") || "";
+    const token = auth.replace("Bearer ", "");
+    const payload = await verifyToken(token);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    
+    const body = await c.req.json();
+    const { products } = body;
+    if (!Array.isArray(products) || products.length === 0) return c.json({ error: "Missing products array" }, 400);
+    
+    const db = getDb();
+    let updated = 0, inserted = 0, priceChanged = 0, costChanged = 0, newProducts = [];
+    const tx = db.transaction(() => {
+      const upStmt = db.prepare("UPDATE products SET price=?, costPrice=?, stock=?, nameTh=?, nameEn=?, barcode=?, updatedAt=datetime('now') WHERE sku=?");
+      const insStmt = db.prepare("INSERT OR IGNORE INTO products (sku, nameTh, nameEn, price, costPrice, stock, barcode, categoryId, status, createdAt, updatedAt) VALUES (?,?,?,?,?,?,?,10,'active',datetime('now'),datetime('now'))");
+      const selStmt = db.prepare("SELECT id, price, costPrice, stock, categoryId FROM products WHERE sku=?");
+      
+      for (const p of products) {
+        if (!p.sku) continue;
+        const existing = selStmt.get(p.sku) as any;
+        if (existing) {
+          if (Math.abs((existing.price||0) - (p.price||0)) > 0.01) priceChanged++;
+          if (Math.abs((existing.costPrice||0) - (p.costPrice||0)) > 0.01) costChanged++;
+          upStmt.run(p.price||0, p.costPrice||0, p.stock||0, p.nameTh||"", p.nameEn||"", p.barcode||"", p.sku);
+          updated++;
+        } else {
+          insStmt.run(p.sku, p.nameTh||"", p.nameEn||"", p.price||0, p.costPrice||0, p.stock||0, p.barcode||"");
+          newProducts.push({ sku: p.sku, name: p.nameTh || p.nameEn });
+          inserted++;
+        }
+      }
+    });
+    tx();
+    
+    return c.json({
+      success: true,
+      total: products.length,
+      updated, inserted, priceChanged, costChanged,
+      newProducts: newProducts.slice(0, 50),
+    });
+  } catch (e: any) {
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 // ── Bulk update product categories (admin only, one-time migration) ──
 app.post("/api/categories/bulk-update", async (c) => {
   try {
