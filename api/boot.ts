@@ -4001,6 +4001,17 @@ app.get("/api/debug/paths", async (c) => {
     autoSyncing = true;
     console.log(`[${new Date().toISOString()}] Starting daily Forte sync...`);
     try {
+      // Check if Forte is reachable (local network only)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      try {
+        await fetch("http://forte2014mukdahan.ddns.net", { method: "HEAD", signal: controller.signal });
+      } catch {
+        console.log(`[${new Date().toISOString()}] ⏭️ Forte ไม่สามารถเข้าถึงได้ (Cloud → Local) — ข้าม Sync`);
+        autoSyncing = false;
+        return;
+      }
+      clearTimeout(timeoutId);
       const result = await autoSyncForte();
       console.log(`[${new Date().toISOString()}] Daily sync result:`, JSON.stringify(result));
     } catch (e: any) {

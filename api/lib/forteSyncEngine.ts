@@ -16,7 +16,7 @@ import { resolveCategoryId, categorizeByName, ALL_CATEGORIES } from "../lib/cate
 import path from "path";
 import fs from "fs";
 
-const FORTE_BASE = "https://fmuk.foret.co.th";
+const FORTE_BASE = process.env.FORTE_BASE_URL || "http://forte2014mukdahan.ddns.net";
 const FORTE_CREDENTIALS = {
   username: process.env.FORTE_USERNAME || "",
   password: process.env.FORTE_PASSWORD || "",
