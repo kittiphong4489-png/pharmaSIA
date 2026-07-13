@@ -909,6 +909,12 @@ app.get("/api/seller/stats", async (c) => {
     const outOfStock = ((db.prepare("SELECT COUNT(*) as c FROM products WHERE stock = 0 OR stock IS NULL").get()) as any)?.c || 0;
     const forteProducts = ((db.prepare("SELECT COUNT(*) as c FROM products WHERE sku LIKE 'FT-%'").get()) as any)?.c || 0;
 
+    // Daily revenue for last 7 days
+    const dailyRevenue = db.prepare(`
+      SELECT date(orderedAt) as day, COALESCE(SUM(grandTotal),0) as revenue
+      FROM orders WHERE orderedAt >= date('now', '-7 days') AND status != 'cancelled'
+      GROUP BY date(orderedAt) ORDER BY day`).all();
+
     // Top selling products
     const topProducts = db.prepare(`
       SELECT oi.productId, oi.productNameTh, SUM(oi.quantity) as totalSold, SUM(oi.subtotal) as totalRevenue
@@ -917,7 +923,7 @@ app.get("/api/seller/stats", async (c) => {
     // Recent orders
     const recentOrders = db.prepare("SELECT * FROM orders ORDER BY id DESC LIMIT 5").all();
 
-    return c.json({ totalProducts, totalOrders, totalRevenue, pendingOrders, todayRevenue, todayOrders, lowStockItems, outOfStock, forteProducts, topProducts, recentOrders });
+    return c.json({ totalProducts, totalOrders, totalRevenue, pendingOrders, todayRevenue, todayOrders, lowStockItems, outOfStock, forteProducts, dailyRevenue, topProducts, recentOrders });
   } catch (e: any) {
     const db = getDb(); await logApiError(c, db, "get_seller_stats", "data", null, e);
     if (e instanceof AuthError) return c.json({ error: e.message }, e.status);
