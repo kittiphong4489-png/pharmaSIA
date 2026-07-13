@@ -545,8 +545,23 @@ app.post("/api/orders", async (c) => {
 
     const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
     const shippingFee = subtotal >= 500 ? 0 : 50;
-    const tax = Math.round((subtotal + shippingFee) * 0.07 * 100) / 100;
-    const grandTotal = subtotal + shippingFee + tax;
+    // Apply discount
+    let discount = 0;
+    let promoCode = body.promoCode || "";
+    let discountType = "";
+    if (promoCode) {
+      const promo = db.prepare("SELECT * FROM promotions WHERE code=? AND isActive=1").get(promoCode.toUpperCase()) as any;
+      if (promo) {
+        discountType = promo.type;
+        if (promo.type === "percentage") { discount = subtotal * promo.value / 100; if (promo.maxDiscount > 0 && discount > promo.maxDiscount) discount = promo.maxDiscount; }
+        else if (promo.type === "fixed") { discount = promo.value; }
+        else if (promo.type === "free_shipping") { discount = shippingFee; discountType = "free_shipping"; }
+        db.prepare("UPDATE promotions SET usedCount=usedCount+1 WHERE id=?").run(promo.id);
+      } else { promoCode = ""; }
+    }
+    const tax = Math.round((subtotal + shippingFee - discount) * 0.07 * 100) / 100;
+    if (tax < 0) tax = 0;
+    const grandTotal = Math.max(0, subtotal + shippingFee - discount + tax);
 
     // Create order
     // Extract userId from auth header if available
@@ -3939,6 +3954,12 @@ if (env.isProduction) {
         db.prepare("UPDATE products SET categoryId=11 WHERE categoryId=1 AND (LOWER(nameTh) LIKE ? OR LOWER(nameEn) LIKE ? OR LOWER(genericNameTh) LIKE ?)")
           .run(`%${drug}%`,`%${drug}%`,`%${drug}%`);
       }
+      // Ensure promotions table exists
+      db.prepare("CREATE TABLE IF NOT EXISTS promotions (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE NOT NULL, nameTh TEXT DEFAULT '', description TEXT DEFAULT '', type TEXT NOT NULL DEFAULT 'percentage', value REAL DEFAULT 0, minOrder REAL DEFAULT 0, maxDiscount REAL DEFAULT 0, usageLimit INTEGER DEFAULT 0, usedCount INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, startDate TEXT, endDate TEXT, createdAt TEXT DEFAULT (datetime('now')), updatedAt TEXT DEFAULT (datetime('now')))").run();
+      // Add discount columns to orders if missing
+      try { db.prepare("ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0").run(); } catch {}
+      try { db.prepare("ALTER TABLE orders ADD COLUMN promoCode TEXT DEFAULT ''").run(); } catch {}
+      try { db.prepare("ALTER TABLE orders ADD COLUMN discountType TEXT DEFAULT ''").run(); } catch {}
       console.log("[Migration] ✅ หมวดหมู่พร้อม");
     }
   } catch (e: any) { console.error("[Migration]", e?.message); }
