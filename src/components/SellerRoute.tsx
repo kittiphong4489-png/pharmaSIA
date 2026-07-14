@@ -6,14 +6,9 @@ export default function SellerRoute({ children }: { children: React.ReactNode })
   if (loading) return <div className="flex items-center justify-center py-16"><div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   if (!user) return <Navigate to="/login" replace />;
   // Only allow specific admin users
-  const adminEmails = [
-    "kittiphong4489@gmail.com",
-    "admin1@pharmacare.com", "admin2@pharmacare.com", "admin3@pharmacare.com",
-    "admin4@pharmacare.com", "admin5@pharmacare.com", "admin6@pharmacare.com",
-    "admin7@pharmacare.com", "admin8@pharmacare.com", "admin9@pharmacare.com",
-    "admin10@pharmacare.com",
-  ];
-  if (!adminEmails.includes(user.email || "")) {
+  const ALLOWED_ROLES = ["SELLER", "ADMIN", "SUPER_ADMIN"];
+  const ADMIN_EMAILS: string[] = [];
+  if (!ADMIN_EMAILS.includes(user.email || "") && !ALLOWED_ROLES.includes(user.role || "")) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
         <div className="text-center">

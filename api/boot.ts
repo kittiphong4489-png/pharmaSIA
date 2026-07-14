@@ -1120,7 +1120,7 @@ app.put("/api/seller/orders/:id/status", async (c) => {
 
 // ── Store Settings API ──
 const DEFAULT_SETTINGS: Record<string, string> = {
-  storeName: "PharmaCare", storeNameTh: "ฟาร์มาค่า",
+  storeName: "PharmaCare", storeNameTh: "ร้านยาออนไลน์",
   storeAddress: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
   storePhone: "02-XXX-XXXX", storeEmail: "contact@pharmacare.com",
   taxId: "", logoUrl: "", lineId: "", facebookUrl: "",
