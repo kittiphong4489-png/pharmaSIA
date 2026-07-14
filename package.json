@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "NODE_ENV=production node dist/boot.js",
-    "build": "vite build && mkdir -p dist/lib && cp api/lib/pharmacare-qr.jpg dist/lib/pharmacare-qr.jpg && esbuild api/boot.ts --platform=node --bundle --packages=external --format=esm --outdir=dist --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
+    "build": "vite build && mkdir -p dist/lib && cp api/lib/pharmacare-qr.jpg dist/lib/pharmacare-qr.jpg && esbuild api/boot.ts --platform=node --bundle --packages=external --format=esm --outdir=dist --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\" && esbuild api/lib/vite.ts --platform=node --bundle --packages=external --format=esm --outdir=dist/lib && mv dist/lib/vite.js dist/lib/vite.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "tsc -b",
