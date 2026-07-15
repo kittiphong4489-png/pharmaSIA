@@ -459,6 +459,7 @@ app.get("/api/products", async (c) => {
   try {
     const search = c.req.query("search") || "";
     const categoryId = c.req.query("categoryId");
+    const subCategoryId = c.req.query("subCategoryId");
     const page = parseInt(c.req.query("page") || "1");
     const limit = parseInt(c.req.query("limit") || "12");
     const minPrice = c.req.query("minPrice");
@@ -483,6 +484,10 @@ app.get("/api/products", async (c) => {
     if (categoryId) {
       sql += " AND categoryId = ?";
       params.push(parseInt(categoryId));
+    }
+    if (subCategoryId) {
+      sql += " AND subCategoryId = ?";
+      params.push(parseInt(subCategoryId));
     }
     if (minPrice) {
       sql += " AND price >= ?";

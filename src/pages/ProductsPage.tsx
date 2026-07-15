@@ -16,14 +16,18 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZES = [20, 50, 100];
 
+interface SubCategory { id: number; nameTh: string; icon: string; }
+
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const catFilter = searchParams.get("categoryId") || "";
+  const subFilter = searchParams.get("subCategoryId") || "";
   const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const sort = searchParams.get("sort") || "default";
@@ -33,6 +37,7 @@ export default function ProductsPage() {
     setLoading(true);
     const params = new URLSearchParams({ limit: String(limit), page: String(page) });
     if (catFilter) params.set("categoryId", catFilter);
+    if (subFilter) params.set("subCategoryId", subFilter);
     if (search) params.set("search", search);
     if (sort && sort !== "default") params.set("sort", sort);
     Promise.all([
@@ -44,7 +49,14 @@ export default function ProductsPage() {
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [catFilter, search, page, sort, limit]);
+
+    // Fetch sub-categories when category is selected
+    if (catFilter) {
+      apiClient(`/api/sub-categories?categoryId=${catFilter}`).then(d => setSubCategories(d || [])).catch(() => {});
+    } else {
+      setSubCategories([]);
+    }
+  }, [catFilter, subFilter, search, page, sort, limit]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
@@ -89,18 +101,34 @@ export default function ProductsPage() {
       </div>
 
       {/* Category Pills */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button onClick={() => updateFilter("categoryId", "")}
+      <div className="flex flex-wrap gap-2 mb-2">
+        <button onClick={() => { updateFilter("categoryId", ""); updateFilter("subCategoryId", ""); }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${!catFilter ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
           ทั้งหมด {total > 0 && <span className="ml-1 text-xs opacity-70">({total})</span>}
         </button>
         {categories.filter(c => (c as any).productCount > 0).map((c) => (
-          <button key={c.id} onClick={() => updateFilter("categoryId", String(c.id))}
+          <button key={c.id} onClick={() => { updateFilter("categoryId", String(c.id)); updateFilter("subCategoryId", ""); }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${catFilter === String(c.id) ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
-            {c.nameTh} <span className="ml-1 text-xs opacity-70">({c.productCount})</span>
+            {c.nameTh} <span className="ml-1 text-xs opacity-70">({(c as any).productCount})</span>
           </button>
         ))}
       </div>
+
+      {/* Sub-category Pills */}
+      {subCategories.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4 ml-2 pl-4 border-l-2 border-blue-200">
+          <button onClick={() => updateFilter("subCategoryId", "")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!subFilter ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+            🔍 ทั้งหมด
+          </button>
+          {subCategories.map((sc) => (
+            <button key={sc.id} onClick={() => updateFilter("subCategoryId", String(sc.id))}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${subFilter === String(sc.id) ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              {sc.icon} {sc.nameTh}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Product Grid */}
       {loading ? (
