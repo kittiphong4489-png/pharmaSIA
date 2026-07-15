@@ -75,8 +75,8 @@ initDb().then(() => {
   // ── Migration: sub_categories table (seed via API) ──
   try {
     db.exec("CREATE TABLE IF NOT EXISTS sub_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, nameTh TEXT NOT NULL, nameEn TEXT DEFAULT '', icon TEXT DEFAULT '💊', categoryId INTEGER DEFAULT 1, sortOrder INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, keywordPatterns TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP)");
-    db.exec("CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(subCategoryId)");
     try { db.exec("ALTER TABLE products ADD COLUMN subCategoryId INTEGER"); } catch {}
+    try { db.exec("CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(subCategoryId)"); } catch {}
   } catch(e) { console.warn("sub_categories migration:", e?.message); }
 }).catch(e => {
   console.error("[DB] Init error:", e?.message);
