@@ -327,7 +327,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </footer>
       )}
 
-      <ChatWidget />
+      {!location.pathname.startsWith("/seller") && <ChatWidget />}
     </div>
   );
 }

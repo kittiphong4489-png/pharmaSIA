@@ -166,6 +166,103 @@ app.post("/api/sub-categories/assign", async (c) => {
 });
 
 
+
+
+// ── Customer Chat API ──
+
+app.post("/api/chat/customer", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { message, sessionToken, customerName, customerPhone } = body;
+    if (!message) return c.json({ success: false, error: "no message" }, 400);
+    const db = getDb();
+
+    let conv = sessionToken ? db.prepare("SELECT * FROM chat_conversations WHERE sessionToken=? AND isActive=1").get(sessionToken) as any : null;
+    if (!conv) {
+      const tok = "sess_" + Math.random().toString(36).slice(2, 10);
+      db.prepare("INSERT INTO chat_conversations (sessionToken, customerName, customerPhone, lastMessage) VALUES (?,?,?,?)")
+        .run(tok, customerName||"ลูกค้า", customerPhone||"", message.substring(0,100));
+      const id = (db.prepare("SELECT last_insert_rowid() as id").get() as any)?.id;
+      conv = { id, sessionToken: tok };
+    }
+
+    db.prepare("INSERT INTO chat_messages (conversationId, role, content, senderName) VALUES (?,'customer',?,?)")
+      .run(conv.id, message, customerName||"ลูกค้า");
+    db.prepare("UPDATE chat_conversations SET lastMessage=?, lastMessageAt=datetime('now'), isRead=0 WHERE id=?")
+      .run(message.substring(0,100), conv.id);
+
+    // Non-blocking Telegram notify
+    try {
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+      if (token && chatId) {
+        const text = `🛎 *ข้อความใหม่จากลูกค้า*\n👤 ${customerName||"ลูกค้า"}
+📱 ${customerPhone||"-"}
+💬 ${message}\n⏰ ${new Date().toLocaleTimeString('th-TH')}`;
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({chat_id: chatId, text, parse_mode:"Markdown"}),
+        }).catch(() => {});
+      }
+    } catch {}
+
+    return c.json({ success: true, sessionToken: conv.sessionToken });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 500); }
+});
+
+// Admin: list conversations
+app.get("/api/chat/sessions", async (c) => {
+  try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const db = getDb();
+    const sessions = db.prepare(
+      "SELECT c.*, (SELECT COUNT(*) FROM chat_messages WHERE conversationId=c.id) as msgCount " +
+      "FROM chat_conversations c WHERE c.isActive=1 ORDER BY c.isRead ASC, c.lastMessageAt DESC"
+    ).all();
+    return c.json(sessions);
+  } catch (e: any) { return c.json([], 500); }
+});
+
+// Admin: get conversation messages
+app.get("/api/chat/sessions/:id", async (c) => {
+  try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const db = getDb();
+    const convId = parseInt(c.req.param("id"));
+    db.prepare("UPDATE chat_conversations SET isRead=1 WHERE id=?").run(convId);
+    const msgs = db.prepare("SELECT * FROM chat_messages WHERE conversationId=? ORDER BY id ASC").all(convId);
+    const conv = db.prepare("SELECT * FROM chat_conversations WHERE id=?").get(convId);
+    return c.json({ conversation: conv, messages: msgs });
+  } catch (e: any) { return c.json([], 500); }
+});
+
+// Admin: reply to conversation
+app.post("/api/chat/sessions/:id/reply", async (c) => {
+  try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    const db = getDb();
+    const convId = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const { message } = body;
+    if (!message) return c.json({ success: false, error: "no message" }, 400);
+    db.prepare("INSERT INTO chat_messages (conversationId, role, content, senderName) VALUES (?,'pharmacist',?,'เภสัชกร')")
+      .run(convId, message);
+    db.prepare("UPDATE chat_conversations SET lastMessage=?, lastMessageAt=datetime('now'), isRead=1 WHERE id=?")
+      .run("💊 เภสัชกร: " + message.substring(0,80), convId);
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 500); }
+});
+
+// Chat migration
+try {
+  const db = getDb();
+  db.exec("CREATE TABLE IF NOT EXISTS chat_conversations (id INTEGER PRIMARY KEY AUTOINCREMENT, sessionToken TEXT UNIQUE NOT NULL, customerName TEXT DEFAULT 'ลูกค้า', customerPhone TEXT DEFAULT '', lastMessage TEXT DEFAULT '', lastMessageAt TEXT DEFAULT CURRENT_TIMESTAMP, isRead INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, createdAt TEXT DEFAULT CURRENT_TIMESTAMP)");
+  db.exec("CREATE TABLE IF NOT EXISTS chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, conversationId INTEGER NOT NULL REFERENCES chat_conversations(id), role TEXT NOT NULL, content TEXT NOT NULL, senderName TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversationId)");
+} catch {}
 // ── REST API ──
 
 app.get("/api/categories", async (c) => {
