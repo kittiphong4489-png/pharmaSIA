@@ -118,7 +118,7 @@ export default function SellerSettingsPage() {
                     className="w-20 h-20 object-contain rounded-lg border border-gray-200 mb-2"
                     onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 )}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input type="file" accept="image/*" onChange={handleUploadLogo}
                     className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                   <input type="text" value={form.logoUrl || ""} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
