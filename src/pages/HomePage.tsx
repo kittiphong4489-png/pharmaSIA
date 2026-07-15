@@ -53,18 +53,42 @@ export default function HomePage() {
   if (!user) {
     return (
       <div className="bg-white">
-        <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
-          <div className="max-w-6xl mx-auto px-6 py-20 md:py-28">
-            <div className="max-w-2xl">
-              <div className="w-14 h-14 bg-white/15 backdrop-blur rounded-2xl flex items-center justify-center mb-6">
-                <ShoppingBag className="w-7 h-7 text-white" />
+        <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white overflow-hidden">
+          {/* Store Photo Background */}
+          {s?.storeImage && (
+            <div className="absolute inset-0 opacity-20">
+              <img src={s.storeImage} alt={s.storeName || "ร้านยา"} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1 max-w-2xl">
+                <div className="w-14 h-14 bg-white/15 backdrop-blur rounded-2xl flex items-center justify-center mb-6">
+                  <ShoppingBag className="w-7 h-7 text-white" />
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">{s?.storeName || "PharmaSIA"}</h1>
+                <p className="text-lg text-blue-100 mb-2 leading-relaxed">{s?.storeType || "ร้านขายยาแผนปัจจุบัน"} — ได้รับอนุญาต</p>
+                <p className="text-sm text-blue-200 mb-8">{s?.storeAddress || ""}</p>
+                <div className="flex flex-wrap gap-3">
+                  <Link to="/login" className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3.5 rounded-xl hover:shadow-lg transition-all text-sm">
+                    <LogIn className="w-4 h-4" /> เข้าสู่ระบบ / สมัครสมาชิก
+                  </Link>
+                  {s?.storePhone && (
+                    <a href={`tel:${s.storePhone}`} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white font-semibold px-6 py-3.5 rounded-xl hover:bg-white/20 transition-all text-sm border border-white/20">
+                      <Phone className="w-4 h-4" /> {s.storePhone}
+                    </a>
+                  )}
+                </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">PharmaSIA</h1>
-              <p className="text-lg text-blue-100 mb-8 leading-relaxed">สินค้าของแท้ ได้มาตรฐาน รับประกัน สั่งง่าย ส่งเร็ว ทั่วประเทศ</p>
-              <div className="flex flex-wrap gap-3">
-                <Link to="/login" className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3.5 rounded-xl hover:shadow-lg transition-all text-sm">
-                  <LogIn className="w-4 h-4" /> เข้าสู่ระบบ / สมัครสมาชิก
-                </Link>
+              {/* Store Photo Card */}
+              <div className="hidden md:block shrink-0">
+                <div className="w-64 h-48 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/30 backdrop-blur">
+                  {s?.storeImage ? (
+                    <img src={s.storeImage} alt={s.storeName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-5xl">🏪</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
