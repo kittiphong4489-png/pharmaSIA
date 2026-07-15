@@ -19,8 +19,11 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Old Service Worker cleanup — unregister old SW if exists
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed:', e));
+        navigator.serviceWorker.getRegistrations().then(regs => 
+          Promise.all(regs.map(r => r.unregister()))
+        );
       }
     </script>
   </body>
