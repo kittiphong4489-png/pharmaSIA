@@ -77,7 +77,8 @@ export default function SellerSettingsPage() {
     } catch { alert("อัปโหลดรูปไม่สำเร็จ"); }
   };
 
-  if (loading) return <div className="max-w-2xl mx-auto px-4 py-8 text-center text-gray-400">กำลังโหลด...</div>;
+  const [lineToken, setLineToken] = useState("");
+  const [lineStatus, setLineStatus] = useState<"loading"|"ok"|"missing">("loading");
 
   const fields = [
     { key: "storeNameTh", label: "ชื่อร้าน (ไทย)", type: "text" },
@@ -94,8 +95,7 @@ export default function SellerSettingsPage() {
     { key: "footer", label: "ข้อความท้ายใบเสร็จ", type: "text" },
   ];
 
-  const [lineToken, setLineToken] = useState("");
-  const [lineStatus, setLineStatus] = useState<"loading"|"ok"|"missing">("loading");
+  if (loading) return <div className="max-w-2xl mx-auto px-4 py-8 text-center text-gray-400">กำลังโหลด...</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
