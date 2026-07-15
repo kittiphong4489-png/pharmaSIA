@@ -1,4 +1,4 @@
-const CACHE = "pharmacare-v1";
+const CACHE = "PharmaSIA-v1";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", function(e) {

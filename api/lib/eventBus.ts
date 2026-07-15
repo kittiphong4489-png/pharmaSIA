@@ -13,7 +13,7 @@ export enum EventType {
   FORTE_SYNC_COMPLETED = "forte.sync_completed",
 }
 
-export interface PharmaCareEvent {
+export interface PharmaSIAEvent {
   id: string;
   type: EventType;
   source: string;
@@ -37,7 +37,7 @@ class EventBus {
     this.handlers.get(type)?.delete(handler);
   }
 
-  emit(event: PharmaCareEvent): void {
+  emit(event: PharmaSIAEvent): void {
     // Run handlers
     const handlers = this.handlers.get(event.type);
     if (handlers && handlers.size > 0) {
@@ -77,14 +77,14 @@ class EventBus {
 export const eventBus = new EventBus();
 
 /**
- * Helper to create a PharmaCareEvent with auto-generated id and current timestamp.
+ * Helper to create a PharmaSIAEvent with auto-generated id and current timestamp.
  */
 export function createEvent(
   type: EventType,
   source: string,
   payload: Record<string, any>,
   actorId?: number
-): PharmaCareEvent {
+): PharmaSIAEvent {
   return {
     id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
     type,

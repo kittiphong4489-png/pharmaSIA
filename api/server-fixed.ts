@@ -1,5 +1,5 @@
 /**
- * server-fixed.ts — PharmaCare Local Server (Fixed)
+ * server-fixed.ts — PharmaSIA Local Server (Fixed)
  * ใช้โครงสร้างเหมือน boot.ts แต่ทำงานได้ไม่ hang
  */
 import { serve } from "@hono/node-server";

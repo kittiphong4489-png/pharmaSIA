@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
 let db: Database.Database | null = null;
 const DB_DIR = path.resolve(typeof __dirname !== "undefined" ? __dirname : ".", 
   typeof __dirname !== "undefined" ? "../data" : "data");
-const DB_PATH = path.join(DB_DIR, "pharmacare.db");
+const DB_PATH = path.join(DB_DIR, "PharmaSIA.db");
 
 export function getDb(): Database.Database {
   if (!db) throw new Error("Database not initialized. Call initDb() first.");
@@ -319,7 +319,7 @@ function seedDefaults(): void {
   if (!existingSettings || existingSettings.c === 0) {
     const defaultSettings = [
       ["storeNameTh", "ร้านยาคุณภาพ"],
-      ["storeName", "PharmaCare"],
+      ["storeName", "PharmaSIA"],
       ["storePhone", ""],
       ["storeAddress", ""],
       ["taxId", ""],
@@ -346,7 +346,7 @@ function seedDefaults(): void {
 
   // Seed settings
   const settingsList: [string, string][] = [
-    ["storeName", "PharmaCare"], ["storeNameTh", "ร้านยาออนไลน์"],
+    ["storeName", "PharmaSIA"], ["storeNameTh", "ร้านยาออนไลน์"],
     ["syncEnabled", "true"], ["syncHour", "2"], ["syncMarginPercent", "15"],
   ];
   for (const [k, v] of settingsList) {

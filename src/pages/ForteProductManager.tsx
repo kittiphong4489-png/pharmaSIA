@@ -104,7 +104,7 @@ export default function ForteProductManager() {
   const pushToCloud = async () => {
     setSyncing(true); setProgress("☁️ กำลังส่งข้อมูลขึ้น Cloud..."); setResult(null);
     try {
-      const data = await apiClient("/api/trpc/forteProxy.saveToDb", t({ mode: "full", cloudUrl: "https://pharmacare-1783398975-production.up.railway.app" }));
+      const data = await apiClient("/api/trpc/forteProxy.saveToDb", t({ mode: "full", cloudUrl: "https://PharmaSIA-1783398975-production.up.railway.app" }));
       if (data.result?.data?.success) {
         setResult({ ok: true, msg: `✅ ส่งข้อมูลขึ้น Cloud สำเร็จ!` });
       } else {

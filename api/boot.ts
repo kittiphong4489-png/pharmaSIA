@@ -863,7 +863,7 @@ app.get("/api/images/qr-promptpay.jpg", async (c) => {
     const path = await import("path");
     const { fileURLToPath } = await import("url");
     const dir = typeof __dirname !== "undefined" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
-    const qrPath = path.join(dir, "lib", "pharmacare-qr.jpg");
+    const qrPath = path.join(dir, "lib", "PharmaSIA-qr.jpg");
     if (!fs.existsSync(qrPath)) return c.json({ error: "QR not found" }, 404);
     const img = fs.readFileSync(qrPath);
     return c.body(new Uint8Array(img), 200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" });
@@ -1252,11 +1252,11 @@ app.put("/api/seller/orders/:id/status", async (c) => {
 
 // ── Store Settings API ──
 const DEFAULT_SETTINGS: Record<string, string> = {
-  storeName: "PharmaCare", storeNameTh: "ร้านยาออนไลน์",
+  storeName: "PharmaSIA", storeNameTh: "ร้านยาออนไลน์",
   storeAddress: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
-  storePhone: "02-XXX-XXXX", storeEmail: "contact@pharmacare.com",
+  storePhone: "02-XXX-XXXX", storeEmail: "contact@PharmaSIA.com",
   taxId: "", logoUrl: "", lineId: "", facebookUrl: "",
-  invoicePrefix: "INV-", footer: "ขอบคุณที่ใช้บริการ PharmaCare",
+  invoicePrefix: "INV-", footer: "ขอบคุณที่ใช้บริการ PharmaSIA",
   syncEnabled: "true", syncHour: "2", syncMarginPercent: "15",
   promptpayPhone: "0881234567",
 };
@@ -1775,7 +1775,7 @@ app.post("/api/admin/setup", async (c) => {
 });
 
 // ── AI Chat Assistant (DeepSeek) ──
-const CHAT_SYSTEM_PROMPT = `คุณคือผู้ช่วยจัดการร้านขายยาออนไลน์ ชื่อ PharmaCare Assistant
+const CHAT_SYSTEM_PROMPT = `คุณคือผู้ช่วยจัดการร้านขายยาออนไลน์ ชื่อ PharmaSIA Assistant
 คุณช่วยเจ้าของร้านจัดการ:
 - ดูรายการสินค้า, ออเดอร์, สถิติ
 - ตั้งราคา, อัปเดตสต็อก
@@ -2599,7 +2599,7 @@ function generatePromptPayPayload(phone: string, amount: number): string {
   const md = `00${String(guid.length).padStart(2, "0")}${guid}01${pLen}${phone}`;
   const cat = "5999";
   const amt = amount.toFixed(2);
-  let tlv = `00020101021229${String(md.length).padStart(2, "0")}${md}5204${cat}530376454${String(amt.length).padStart(2, "0")}${amt}5802TH5910PharmaCare6007Bangkok6304`;
+  let tlv = `00020101021229${String(md.length).padStart(2, "0")}${md}5204${cat}530376454${String(amt.length).padStart(2, "0")}${amt}5802TH5910PharmaSIA6007Bangkok6304`;
   return tlv + crc16(tlv);
 }
 
@@ -3573,7 +3573,7 @@ app.get("/api/suppliers/:name/batches", async (c) => {
 
 // ── Health check (public — no auth) ──
 app.get("/health", async (c) => {
-  const result = { ok: true, ts: Date.now(), v: "pharmacare-v3-refactored", checks: {} as Record<string, string> };
+  const result = { ok: true, ts: Date.now(), v: "PharmaSIA-v3-refactored", checks: {} as Record<string, string> };
   
   try {
     const db = getDb();
@@ -3612,7 +3612,7 @@ app.get("/health", async (c) => {
 
 // ── Railway healthcheck alias ──
 app.get("/api/health", async (c) => {
-  return c.json({ ok: true, ts: Date.now(), v: "pharmacare-v3-refactored" });
+  return c.json({ ok: true, ts: Date.now(), v: "PharmaSIA-v3-refactored" });
 });
 
 // ── Find order by phone + order number (public) ──
@@ -4112,7 +4112,7 @@ if (env.isProduction) {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (botToken) {
-      const webhookUrl = `https://pharmacare-1783398975-production.up.railway.app/telegram/callback`;
+      const webhookUrl = `https://PharmaSIA-1783398975-production.up.railway.app/telegram/callback`;
       fetch(`https://api.telegram.org/bot${botToken}/setWebhook?url=${webhookUrl}`, {
         signal: AbortSignal.timeout(5000),
       }).then(r => r.json()).then(d => {

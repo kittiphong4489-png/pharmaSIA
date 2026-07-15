@@ -67,7 +67,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
     const R_RIGHT = QR_X + QR_SIZE + GAP_1CM;
     fn(true);
     doc.fontSize(16).fillColor("#2E7D32")
-      .text(s.storeNameTh || s.storeName || "PharmaCare", ML, y, { width: L_COL_W });
+      .text(s.storeNameTh || s.storeName || "PharmaSIA", ML, y, { width: L_COL_W });
     y += 22;
 
     fn();
@@ -80,7 +80,7 @@ export async function generateInvoicePdf(orderId: number): Promise<Buffer> {
 
     // ── CENTER: QR Code (1x1 inch, between left & right) ──
     const refStartY = 40;
-    const qrUrl = `https://pharmacare-1783398975-production.up.railway.app/scan/${orderId}`;
+    const qrUrl = `https://PharmaSIA-1783398975-production.up.railway.app/scan/${orderId}`;
     try {
       const qrBuffer = await QRCode.toBuffer(qrUrl, { width: 90, margin: 1 });
       doc.image(qrBuffer, QR_X, refStartY + 5, { width: QR_SIZE, height: QR_SIZE });

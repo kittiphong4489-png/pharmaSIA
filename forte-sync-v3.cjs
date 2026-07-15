@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * forte-sync-v3.js — Forte → PharmaCare Sync Engine v3
+ * forte-sync-v3.js — Forte → PharmaSIA Sync Engine v3
  *
  * 🔑 จับคู่สินค้าโดย SKU
  * ✅ ไม่เปลี่ยน categoryId ของเรา
@@ -21,7 +21,7 @@ const path = require("path");
 const https = require("https");
 
 // ── SQLite setup ──
-const DB_PATH = path.join(__dirname, "data", "pharmacare.db");
+const DB_PATH = path.join(__dirname, "data", "PharmaSIA.db");
 let db;
 try {
   db = require("better-sqlite3")(DB_PATH);
@@ -336,7 +336,7 @@ function printReport() {
 // ── Main ──
 async function main() {
   console.log("╔══════════════════════════════════════╗");
-  console.log("║    Forte → PharmaCare Sync v3       ║");
+  console.log("║    Forte → PharmaSIA Sync v3       ║");
   console.log("╚══════════════════════════════════════╝\n");
 
   try {
@@ -353,7 +353,7 @@ async function main() {
         const adminPass = "44894489";
         
         // Login to Railway API
-        const loginRes = await fetch("https://pharmacare-1783398975-production.up.railway.app/api/trpc/auth.login?batch=1", {
+        const loginRes = await fetch("https://PharmaSIA-1783398975-production.up.railway.app/api/trpc/auth.login?batch=1", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ "0": { email: adminEmail, password: adminPass } }),
@@ -380,7 +380,7 @@ async function main() {
         }
         
         if (changes.length > 0) {
-          const pushRes = await fetch("https://pharmacare-1783398975-production.up.railway.app/api/products/sync", {
+          const pushRes = await fetch("https://PharmaSIA-1783398975-production.up.railway.app/api/products/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ products: changes }),

@@ -40,7 +40,7 @@ interface FullOrderNotification {
 export async function sendOrderNotificationWithActions(order: FullOrderNotification): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN || "";
   const chatId = process.env.TELEGRAM_CHAT_ID || "";
-  const botDomain = process.env.BOT_DOMAIN || "https://pharmacare-1783398975-production.up.railway.app";
+  const botDomain = process.env.BOT_DOMAIN || "https://PharmaSIA-1783398975-production.up.railway.app";
 
   if (!token || !chatId) {
     console.log("[Telegram] ⏭️ Skipped — TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set");

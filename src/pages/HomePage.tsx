@@ -18,7 +18,7 @@ const CATEGORIES = [
 ];
 
 const HERO_SLIDES = [
-  { bg: "from-blue-600 to-indigo-700", title: "PharmaCare", subtitle: "สินค้าของแท้ ได้มาตรฐาน ราคายุติธรรม" },
+  { bg: "from-blue-600 to-indigo-700", title: "PharmaSIA", subtitle: "สินค้าของแท้ ได้มาตรฐาน ราคายุติธรรม" },
   { bg: "from-emerald-600 to-teal-700", title: "มากกว่า 6,000 รายการ", subtitle: "ยาจริง เวชภัณฑ์ อาหารเสริม พร้อมจัดส่ง" },
   { bg: "from-violet-600 to-purple-700", title: "โปรโมชั่นพิเศษ", subtitle: "ส่วนลดค่าส่ง 50% เมื่อสั่ง 500+" },
 ];
@@ -59,7 +59,7 @@ export default function HomePage() {
               <div className="w-14 h-14 bg-white/15 backdrop-blur rounded-2xl flex items-center justify-center mb-6">
                 <ShoppingBag className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">PharmaCare</h1>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">PharmaSIA</h1>
               <p className="text-lg text-blue-100 mb-8 leading-relaxed">สินค้าของแท้ ได้มาตรฐาน รับประกัน สั่งง่าย ส่งเร็ว ทั่วประเทศ</p>
               <div className="flex flex-wrap gap-3">
                 <Link to="/login" className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3.5 rounded-xl hover:shadow-lg transition-all text-sm">
@@ -260,7 +260,7 @@ export default function HomePage() {
       <footer className="bg-white border-t border-gray-100 text-gray-500 py-10">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="col-span-2 md:col-span-1">
-            <h3 className="font-bold text-gray-800 mb-2">{s.storeNameTh || "PharmaCare"}</h3>
+            <h3 className="font-bold text-gray-800 mb-2">{s.storeNameTh || "PharmaSIA"}</h3>
             <p className="text-gray-400 leading-relaxed">{s.storeAddress || "ร้านยาออนไลน์"}</p>
           </div>
           <div>
@@ -284,7 +284,7 @@ export default function HomePage() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-50 mt-8 pt-6 text-center text-xs text-gray-300">&copy; 2026 {s.storeNameTh || "PharmaCare"}</div>
+        <div className="border-t border-gray-50 mt-8 pt-6 text-center text-xs text-gray-300">&copy; 2026 {s.storeNameTh || "PharmaSIA"}</div>
       </footer>
     </div>
   );

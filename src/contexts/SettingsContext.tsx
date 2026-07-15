@@ -25,7 +25,7 @@ interface SettingsContextType {
 
 // ── Display helpers (Graceful Fallback) ──
 export function getStoreDisplayName(settings: StoreSettings | null): string {
-  return settings?.storeNameTh || settings?.storeName || "PharmaCare";
+  return settings?.storeNameTh || settings?.storeName || "PharmaSIA";
 }
 
 export function getStoreLogo(settings: StoreSettings | null): string | null {

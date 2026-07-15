@@ -6,7 +6,7 @@
  * วิธีใช้:
  *   1. ติดตั้ง Node.js (https://nodejs.org)
  *   2. รัน: node forte-fetch.js <username> <password> [output.json]
- *   3. ได้ไฟล์ JSON → นำไป Upload ใน PharmaCare
+ *   3. ได้ไฟล์ JSON → นำไป Upload ใน PharmaSIA
  *
  * ตัวอย่าง:
  *   node forte-fetch.js MK25-0264 mypassword
@@ -187,7 +187,7 @@ async function main() {
 
   console.log(`\n✅ บันทึก ${products.length} รายการ → ${outputFile}`);
   console.log(`\nขั้นตอนต่อไป:`);
-  console.log(`  1. เปิดหน้า "จัดการสินค้า Forte" ใน PharmaCare`);
+  console.log(`  1. เปิดหน้า "จัดการสินค้า Forte" ใน PharmaSIA`);
   console.log(`  2. กด "Upload JSON" → เลือกไฟล์ ${outputFile}`);
   console.log(`  3. กำหนด % กำไร → บันทึก`);
 }

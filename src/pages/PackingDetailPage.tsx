@@ -134,7 +134,7 @@ export default function PackingDetailPage() {
       })()
     : "";
 
-  const storeName = settings?.storeNameTh || settings?.storeName || "PharmaCare";
+  const storeName = settings?.storeNameTh || settings?.storeName || "PharmaSIA";
   const storeAddr = settings?.storeAddress || "";
   const storePhone = settings?.storePhone || "";
   const storeTaxId = settings?.taxId || "";

@@ -8,7 +8,7 @@ interface ChatMessage {
   actions?: { label: string; action: string; payload?: any }[];
 }
 
-const WELCOME = `สวัสดีครับ! 🚀 ผม PharmaCare Assistant
+const WELCOME = `สวัสดีครับ! 🚀 ผม PharmaSIA Assistant
 
 ผมช่วยคุณจัดการร้านได้จริงๆ เช่น:
 • "ซิงค์ Forte หน่อย" → ดึงสินค้าจาก Forte
@@ -144,7 +144,7 @@ export default function ChatWidget() {
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">🤖</div>
                 <div>
-                  <p className="font-semibold text-sm">PharmaCare Assistant</p>
+                  <p className="font-semibold text-sm">PharmaSIA Assistant</p>
                   <p className="text-xs text-blue-100">สั่งงานหลังบ้านได้</p>
                 </div>
               </div>

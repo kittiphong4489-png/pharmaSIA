@@ -1,5 +1,5 @@
 /**
- * boot.ts — PharmaCare API Server (Fixed)
+ * boot.ts — PharmaSIA API Server (Fixed)
  *
  * 🔧 FIX: ใช้ await initDb() โดยตรง ไม่ใช่ initDb().then()
  *        ป้องกันการ hang ที่เกิดจากการเรียกใช้ initDb แบบ async

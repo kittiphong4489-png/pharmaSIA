@@ -6,7 +6,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { env } from "./env";
 
 const JWT_SECRET = new TextEncoder().encode(env.appSecret);
-const JWT_ISSUER = "pharmacare";
+const JWT_ISSUER = "PharmaSIA";
 const TOKEN_EXPIRY = "7d";
 
 export interface JwtPayload {

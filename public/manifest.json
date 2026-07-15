@@ -1,6 +1,6 @@
 {
-  "name": "PharmaCare",
-  "short_name": "PharmaCare",
+  "name": "PharmaSIA",
+  "short_name": "PharmaSIA",
   "description": "ร้านยาออนไลน์ ครบวงจร",
   "start_url": "/",
   "display": "standalone",

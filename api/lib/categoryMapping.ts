@@ -1,7 +1,7 @@
 /**
  * api/lib/categoryMapping.ts — ระบบจัดหมวดหมู่สินค้า 10 หมวด
  *
- * แม็ป Forte category names → 10 categories ตามกฎใน PharmaCare_Category_Mapping.md
+ * แม็ป Forte category names → 10 categories ตามกฎใน PharmaSIA_Category_Mapping.md
  */
 
 // ── 10 หมวดหมู่หลัก ──

@@ -317,13 +317,13 @@ export default function CartPage() {
               <div className="relative inline-flex">
                 <img src="/api/images/qr-promptpay.jpg" alt="PromptPay QR"
                   className="w-56 h-56 rounded-xl shadow-md border-2 border-gray-100" />
-                <a href="/api/images/qr-promptpay.jpg" download="pharmacare-promptpay.jpg"
+                <a href="/api/images/qr-promptpay.jpg" download="PharmaSIA-promptpay.jpg"
                   className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full shadow flex items-center justify-center text-blue-600 hover:bg-white border border-gray-200 cursor-pointer text-xs"
                   title="ดาวน์โหลด QR Code">⬇</a>
               </div>
             </div>
             <div className="text-sm text-gray-600 space-y-1 mt-4 bg-blue-50 rounded-xl p-4 text-center max-w-xs mx-auto">
-              <p className="font-semibold text-gray-900">PharmaCare</p>
+              <p className="font-semibold text-gray-900">PharmaSIA</p>
               <p>PromptPay: <span className="font-mono font-bold">075-3600-031</span></p>
               <p className="text-xl font-bold text-blue-600">฿{payment.amount.toFixed(2)}</p>
             </div>

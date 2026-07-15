@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * server.js — Minimal PharmaCare Local Server
+ * server.js — Minimal PharmaSIA Local Server
  * เปิด server โดยตรง โดยใช้ source boot.ts ผ่าน tsx
  * หรือใช้ dist/boot.js ที่ build แล้ว
  */
@@ -21,11 +21,11 @@ if (!fs.existsSync(TSX)) {
   process.exit(1);
 }
 
-console.log(`🚀 PharmaCare Server (tsx ${TSX})`);
+console.log(`🚀 PharmaSIA Server (tsx ${TSX})`);
 console.log(`   Node: ${execSync(NODE + " --version").toString().trim()}`);
 
 // Ensure DB is not corrupted
-const DB = path.join(DIR, "data", "pharmacare.db");
+const DB = path.join(DIR, "data", "PharmaSIA.db");
 if (!fs.existsSync(DB)) {
   console.log("❌ Database not found at", DB);
   process.exit(1);
@@ -46,7 +46,7 @@ try {
 }
 
 // Set env and start
-process.env.APP_SECRET = process.env.APP_SECRET || "pharmacare-local-secret-2026";
+process.env.APP_SECRET = process.env.APP_SECRET || "PharmaSIA-local-secret-2026";
 process.env.PORT = process.env.PORT || "3000";
 
 const proc = spawn(NODE, [TSX, path.join(DIR, "api/boot.ts")], {
