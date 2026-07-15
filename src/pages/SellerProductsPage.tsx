@@ -31,7 +31,7 @@ export default function SellerProductsPage() {
     if (catFilter) params.set("categoryId", catFilter);
     if (search) params.set("search", search);
     Promise.all([
-      apiClient(`/api/products?${params}`),
+      apiClient(`/api/admin/products?${params}`),
       apiClient("/api/categories"),
     ]).then(([data, cats]) => {
       setProducts(data.items || []);

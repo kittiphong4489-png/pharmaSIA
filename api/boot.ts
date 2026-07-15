@@ -300,10 +300,45 @@ app.get("/api/products", async (c) => {
     sql += " LIMIT ? OFFSET ?";
     params.push(limit, offset);
     const items = db.prepare(sql).all(...params);
-
-    return c.json({ items, total, totalPages: Math.ceil(total / limit) });
+    // Strip costPrice from public API (security)
+    const publicItems = items.map((item: any) => {
+      const { costPrice: _, ...rest } = item;
+      return rest;
+    });
+    return c.json({ items: publicItems, total, totalPages: Math.ceil(total / limit) });
   } catch (e: any) {
     const db = getDb(); await logApiError(c, db, "get_products", "data", null, e);
+    return c.json({ items: [], total: 0, totalPages: 0, error: e?.message }, 500);
+  }
+});
+
+// ── Admin Products (with costPrice) ──
+app.get("/api/admin/products", async (c) => {
+  try {
+    const search = c.req.query("search") || "";
+    const categoryId = c.req.query("categoryId");
+    const page = Math.max(1, parseInt(c.req.query("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(c.req.query("limit") || "50")));
+    const sort = c.req.query("sort") || "default";
+    const db = getDb();
+    
+    let sql = "SELECT p.*, c.nameTh as categoryNameTh FROM products p LEFT JOIN categories c ON p.categoryId = c.id WHERE 1=1";
+    const params: any[] = [];
+    
+    if (categoryId) { sql += " AND p.categoryId = ?"; params.push(parseInt(categoryId)); }
+    if (search) { sql += " AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?)"; params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+    
+    const countSql = "SELECT COUNT(*) as total FROM products p WHERE 1=1" + (categoryId ? " AND categoryId = ?" : "") + (search ? " AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?)" : "");
+    const countParams = categoryId ? [parseInt(categoryId)] : [];
+    if (search) countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    const { total } = db.prepare(countSql).get(...countParams) as any;
+    
+    const sortMap: Record<string, string> = { price_asc: "p.price ASC", price_desc: "p.price DESC", name: "p.nameTh ASC", newest: "p.id DESC", default: "p.id DESC" };
+    sql += ` ORDER BY ${sortMap[sort] || "p.id DESC"} LIMIT ? OFFSET ?`;
+    params.push(limit, (page - 1) * limit);
+    
+    return c.json({ items: db.prepare(sql).all(...params), total, totalPages: Math.ceil(total / limit) });
+  } catch (e: any) {
     return c.json({ items: [], total: 0, totalPages: 0, error: e?.message }, 500);
   }
 });
