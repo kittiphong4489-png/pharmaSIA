@@ -68,12 +68,10 @@ app.use("/api/*", rateLimit);
 // Eager DB init for both dev and production
 initDb().then(() => {
   console.log(`[${new Date().toISOString()}] DB initialized`);
+  const db = getDb();
   
-  // ── Migration: add slipUrl column to payments (if not exists) ──
-  try {
-    const db = getDb();
-    db.exec("ALTER TABLE payments ADD COLUMN slipUrl TEXT DEFAULT ''");
-  } catch {} // Column already exists
+  // ── Migration: add slipUrl column to payments ──
+  try { db.exec("ALTER TABLE payments ADD COLUMN slipUrl TEXT DEFAULT ''"); } catch {}
 }).catch(e => {
   console.error("[DB] Init error:", e?.message);
 });
