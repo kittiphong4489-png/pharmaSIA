@@ -365,18 +365,16 @@ export default function CartPage() {
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button onClick={() => downloadInvoice(orderResult.orderId, orderResult.orderNumber)}
-              className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-50 text-blue-700 font-medium rounded-xl hover:bg-blue-100 border border-blue-200 text-sm">📄 ดูรายการสั่งซื้อ</button>
-            <Link to="/products" className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 text-sm">🛍️ เลือกสินค้าต่อ</Link>
-            <Link to="/" className="inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 border border-gray-200 text-sm">🏠 หน้าแรก</Link>
-          </div>
-          <div className="mt-2">
-            <Link to={`/account/orders/${orderResult.orderId}`} className="text-sm text-red-500 hover:text-red-700 underline">
-              ❌ ยกเลิกออเดอร์นี้
-            </Link>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => downloadInvoice(orderResult.orderId, orderResult.orderNumber)}
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-blue-50 text-blue-700 font-medium rounded-xl hover:bg-blue-100 border border-blue-200">📄 ดูรายการสั่งซื้อ</button>
+          <Link to="/products" className="inline-flex items-center justify-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700">🛍️ เลือกสินค้าต่อ</Link>
+          <Link to="/" className="inline-flex items-center justify-center px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 border border-gray-200">🏠 หน้าแรก</Link>
+        </div>
+        <div className="mt-4">
+          <Link to={`/account/orders/${orderResult.orderId}`} className="text-sm text-red-500 hover:text-red-700 underline">
+            ❌ ยกเลิกออเดอร์นี้
+          </Link>
         </div>
       </div>
     );
@@ -411,38 +409,33 @@ export default function CartPage() {
 
           <div className="space-y-3 mb-6">
             {items.map((item) => (
-              <div key={item.id} className={`bg-white rounded-2xl border p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:shadow-sm transition-shadow ${selectedItems.has(item.id) ? 'border-blue-200' : 'border-gray-100 opacity-60'}`}>
-                <div className="flex items-center gap-3">
-                  <input type="checkbox" checked={selectedItems.has(item.id)} onChange={() => toggleItem(item.id)}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0" />
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0 overflow-hidden">
-                    {item.image ? <img src={item.image} alt={item.nameTh} className="w-full h-full object-contain" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <span>💊</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm truncate">{item.nameTh}</h3>
-                    <p className="text-blue-600 font-bold">฿{item.price}</p>
-                  </div>
+              <div key={item.id} className={`bg-white rounded-2xl border p-4 flex items-center gap-3 hover:shadow-sm transition-shadow ${selectedItems.has(item.id) ? 'border-blue-200' : 'border-gray-100 opacity-60'}`}>
+                <input type="checkbox" checked={selectedItems.has(item.id)} onChange={() => toggleItem(item.id)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0" />
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                  {item.image ? <img src={item.image} alt={item.nameTh} className="w-full h-full object-contain" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <span>💊</span>}
                 </div>
-                {/* Mobile: qty + delete below, Desktop: inline */}
-                <div className="flex items-center gap-2 justify-between sm:justify-end sm:flex-1">
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-50">−</button>
-                    <input type="number" min="1"
-                      value={localQtys[item.id] ?? String(item.quantity)}
-                      onChange={(e) => setLocalQtys(prev => ({ ...prev, [item.id]: e.target.value }))}
-                      onBlur={(e) => {
-                        const v = Math.min(parseInt(e.target.value) || 1, item.stock);
-                        if (v >= 1 && v !== item.quantity) updateQty(item.id, v);
-                        setLocalQtys(prev => { const next = { ...prev }; delete next[item.id]; return next; });
-                      }}
-                      className="w-14 text-center font-semibold text-sm border border-gray-200 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <button onClick={() => updateQty(item.id, Math.min(item.quantity + 1, item.stock))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-50">+</button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">฿{(item.price * item.quantity).toFixed(0)}</p>
-                    <button onClick={() => removeItem(item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">✕</button>
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 text-sm truncate">{item.nameTh}</h3>
+                  <p className="text-blue-600 font-bold mt-1">฿{item.price}</p>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-50 hover:border-gray-300 transition-colors">−</button>
+                  <input type="number" min="1"
+                    value={localQtys[item.id] ?? String(item.quantity)}
+                    onChange={(e) => setLocalQtys(prev => ({ ...prev, [item.id]: e.target.value }))}
+                    onBlur={(e) => {
+                      const v = Math.min(parseInt(e.target.value) || 1, item.stock);
+                      if (v >= 1 && v !== item.quantity) updateQty(item.id, v);
+                      setLocalQtys(prev => { const next = { ...prev }; delete next[item.id]; return next; });
+                    }}
+                    className="w-14 text-center font-semibold text-sm border border-gray-200 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <button onClick={() => updateQty(item.id, Math.min(item.quantity + 1, item.stock))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-50 hover:border-gray-300 transition-colors">+</button>
+                </div>
+                <div className="text-right w-20">
+                  <p className="font-bold text-gray-900">฿{(item.price * item.quantity).toFixed(0)}</p>
+                </div>
+                <button onClick={() => removeItem(item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">✕</button>
               </div>
             ))}
           </div>
@@ -606,7 +599,7 @@ export default function CartPage() {
               {/* Confirmation Dialog */}
               {showConfirmDialog && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowConfirmDialog(false)}>
-                  <div className="bg-white rounded-2xl p-6 sm:max-w max-w-full sm:rounded-2xl rounded-none sm:mx-4 mx-0-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+                  <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">ยืนยันสั่งซื้อ</h3>
                     <p className="text-sm text-gray-500 mb-4">ยืนยันดำเนินการสั่งซื้อ {selectedItems.size} รายการ รวมเป็นเงิน <strong className="text-blue-600">฿{grandTotal.toFixed(2)}</strong></p>
                     <div className="flex gap-3">

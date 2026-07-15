@@ -114,7 +114,7 @@ export default function SellerSubCategoriesPage() {
           </div>
 
           {grouped[cat.id]?.length > 0 ? (
-            <div class="overflow-x-auto"><table className="w-full text-sm">
+            <table className="w-full text-sm">
               <thead><tr className="border-b text-left text-gray-500">
                 <th className="px-4 py-2 font-medium">ไอคอน</th>
                 <th className="px-4 py-2 font-medium">ชื่อหมวดย่อย</th>
@@ -175,7 +175,7 @@ export default function SellerSubCategoriesPage() {
       {/* Add Modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowAdd(false)}>
-          <div className="bg-white rounded-2xl p-6 sm:max-w max-w-full sm:rounded-2xl rounded-none sm:mx-4 mx-0-md w-full mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold mb-4">เพิ่มหมวดย่อย</h2>
             <div className="space-y-3">
               <select value={addForm.categoryId} onChange={e => setAddForm({...addForm, categoryId: +e.target.value})}
