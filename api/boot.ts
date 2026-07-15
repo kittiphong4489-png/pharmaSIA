@@ -263,6 +263,45 @@ try {
   db.exec("CREATE TABLE IF NOT EXISTS chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, conversationId INTEGER NOT NULL REFERENCES chat_conversations(id), role TEXT NOT NULL, content TEXT NOT NULL, senderName TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversationId)");
 } catch {}
+
+// ── Store Photos ──
+app.get("/api/photos/store", async (c) => {
+  try {
+    const { fileURLToPath } = await import("url");
+    const path = await import("path");
+    const fs = await import("fs");
+    const dir = typeof __dirname !== "undefined" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+    const p = path.join(dir, "lib", "store-photo.jpg");
+    if (!fs.existsSync(p)) return c.json({ error: "not found" }, 404);
+    return c.body(new Uint8Array(fs.readFileSync(p)), 200, { "Content-Type": "image/jpeg" });
+  } catch { return c.json({ error: "not found" }, 404); }
+});
+
+app.get("/api/photos/pharmacist", async (c) => {
+  try {
+    const { fileURLToPath } = await import("url");
+    const path = await import("path");
+    const fs = await import("fs");
+    const dir = typeof __dirname !== "undefined" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+    const p = path.join(dir, "lib", "pharmacist-photo.jpg");
+    if (!fs.existsSync(p)) return c.json({ error: "not found" }, 404);
+    return c.body(new Uint8Array(fs.readFileSync(p)), 200, { "Content-Type": "image/jpeg" });
+  } catch { return c.json({ error: "not found" }, 404); }
+});
+
+// ── Pharmacy License PDF ──
+app.get("/api/photos/license", async (c) => {
+  try {
+    const { fileURLToPath } = await import("url");
+    const path = await import("path");
+    const fs = await import("fs");
+    const dir = typeof __dirname !== "undefined" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+    const p = path.join(dir, "lib", "license.jpg");
+    if (!fs.existsSync(p)) return c.json({ error: "not found" }, 404);
+    return c.body(new Uint8Array(fs.readFileSync(p)), 200, { "Content-Type": "image/jpeg" });
+  } catch { return c.json({ error: "not found" }, 404); }
+});
+
 // ── REST API ──
 
 app.get("/api/categories", async (c) => {
