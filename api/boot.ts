@@ -1388,13 +1388,21 @@ app.put("/api/seller/orders/:id/status", async (c) => {
 
 // ── Store Settings API ──
 const DEFAULT_SETTINGS: Record<string, string> = {
-  storeName: "PharmaSIA", storeNameTh: "ร้านยาออนไลน์",
-  storeAddress: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
-  storePhone: "02-XXX-XXXX", storeEmail: "contact@PharmaSIA.com",
-  taxId: "", logoUrl: "", lineId: "", facebookUrl: "",
-  invoicePrefix: "INV-", footer: "ขอบคุณที่ใช้บริการ PharmaSIA",
+  storeName: "บ้านหมอยา PharmaSIA", storeNameTh: "บ้านหมอยา PharmaSIA",
+  storeType: "ร้านขายยาแผนปัจจุบัน (ขย.5)",
+  storeAddress: "20 ม.9 ต.หลุบ อ.เมืองกาฬสินธุ์ 46000",
+  storePhone: "0990103364", storeEmail: "kittiphong4489@gmail.com",
+  taxId: "1469900398909", logoUrl: "", lineId: "", facebookUrl: "",
+  invoicePrefix: "INV-", footer: "ขอบคุณที่ใช้บริการ",
   syncEnabled: "true", syncHour: "2", syncMarginPercent: "15",
   promptpayPhone: "0881234567",
+  licenseNumber: "กส 9/2568",
+  pharmacistName: "นายวรยุท วิเชียรซอย",
+  pharmacistLicense: "ภ.48007",
+  operatingHours: "จันทร์-ศุกร์ 16:30-21:00 น. | เสาร์-อาทิตย์ 08:00-21:00 น.",
+  licenseImage: "/api/photos/license",
+  storeImage: "/api/photos/store",
+  pharmacistPhoto: "/api/photos/pharmacist",
 };
 
 function getStoreSettings(db: any): Record<string, string> {
