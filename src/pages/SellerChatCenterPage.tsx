@@ -47,7 +47,7 @@ export default function SellerChatCenterPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 flex gap-6 h-[calc(100vh-12rem)]">
       {/* Left: Session List */}
-      <div className="w-80 bg-white rounded-xl border flex flex-col overflow-hidden">
+      <div className="w-full lg:w-80 bg-white rounded-xl border flex flex-col overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold">
           💬 กล่องข้อความลูกค้า ({sessions.length})
         </div>

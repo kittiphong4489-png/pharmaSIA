@@ -114,7 +114,7 @@ export default function SellerSubCategoriesPage() {
           </div>
 
           {grouped[cat.id]?.length > 0 ? (
-            <table className="w-full text-sm">
+            <div class="overflow-x-auto"><table className="w-full text-sm">
               <thead><tr className="border-b text-left text-gray-500">
                 <th className="px-4 py-2 font-medium">ไอคอน</th>
                 <th className="px-4 py-2 font-medium">ชื่อหมวดย่อย</th>

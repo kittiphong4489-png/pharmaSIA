@@ -85,7 +85,7 @@ export default function AdminUserManagementPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <table className="w-full text-sm">
+          <div class="overflow-x-auto"><table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-600">ชื่อ</th>

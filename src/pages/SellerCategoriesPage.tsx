@@ -90,7 +90,7 @@ export default function SellerCategoriesPage() {
       {msg && <div className="mb-4 p-3 rounded-lg text-sm bg-blue-50 border border-blue-200 text-blue-700">{msg}</div>}
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <table className="w-full text-sm">
+        <div class="overflow-x-auto"><table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
               <th className="p-3 font-medium w-10">#</th>

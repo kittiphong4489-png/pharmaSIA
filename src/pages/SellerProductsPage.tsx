@@ -160,15 +160,15 @@ export default function SellerProductsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-left text-gray-500">
-                <th className="pb-3 font-medium">SKU</th>
+                <th className="pb-3 font-medium hidden lg:table-cell">SKU</th>
                 <th className="pb-3 font-medium">ชื่อสินค้า</th>
-                <th className="pb-3 font-medium">หมวดหมู่</th>
+                <th className="pb-3 font-medium hidden md:table-cell">หมวดหมู่</th>
                 <th className="pb-3 font-medium">ราคาขาย</th>
-                <th className="pb-3 font-medium">ต้นทุน</th>
-                <th className="pb-3 font-medium">กำไร%</th>
-                <th className="pb-3 font-medium">กำไร฿</th>
+                <th className="pb-3 font-medium hidden lg:table-cell">ต้นทุน</th>
+                <th className="pb-3 font-medium hidden lg:table-cell">กำไร%</th>
+                <th className="pb-3 font-medium hidden lg:table-cell">กำไร฿</th>
                 <th className="pb-3 font-medium">สต็อก</th>
-                <th className="pb-3 font-medium">สถานะ</th>
+                <th className="pb-3 font-medium hidden md:table-cell">สถานะ</th>
                 <th className="pb-3 font-medium"></th>
               </tr>
             </thead>
@@ -222,25 +222,25 @@ export default function SellerProductsPage() {
                     </>
                   ) : (
                     <>
-                      <td className="py-3 text-gray-400 font-mono text-xs">{p.sku}</td>
+                      <td className="py-3 text-gray-400 font-mono text-xs hidden lg:table-cell">{p.sku}</td>
                       <td className="py-3 font-medium">{p.nameTh}</td>
-                      <td className="py-3">
+                      <td className="py-3 hidden md:table-cell">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                           {p.categoryNameTh || (categories.find((c: any) => c.id === p.categoryId)?.nameTh) || "อื่นๆ"}
                         </span>
                       </td>
                       <td className="py-3 text-blue-600 font-medium">฿{p.price}</td>
-                      <td className="py-3 text-orange-600 font-medium">
+                      <td className="py-3 text-orange-600 font-medium hidden lg:table-cell">
                         {p.costPrice > 0 ? `฿${p.costPrice}` : "-"}
                       </td>
-                      <td className="py-3 font-medium">
+                      <td className="py-3 font-medium hidden lg:table-cell">
                         {p.costPrice > 0 ? (
                           <span className={`${(p.price - p.costPrice) / p.costPrice > 0.2 ? "text-green-600" : "text-red-600"}`}>
                             {Math.round((p.price - p.costPrice) / p.costPrice * 100)}%
                           </span>
                         ) : "-"}
                       </td>
-                      <td className="py-3 font-medium">
+                      <td className="py-3 font-medium hidden lg:table-cell">
                         {p.costPrice > 0 ? (
                           <span className={`${(p.price - p.costPrice) > 0 ? "text-green-600" : "text-red-600"}`}>
                             ฿{(p.price - p.costPrice).toFixed(2)}
@@ -248,7 +248,7 @@ export default function SellerProductsPage() {
                         ) : "-"}
                       </td>
                       <td className="py-3">{p.stock}</td>
-                      <td className="py-3">
+                      <td className="py-3 hidden md:table-cell">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${p.status === "active" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
                           {p.status === "active" ? "ขาย" : "หยุด"}
                         </span>

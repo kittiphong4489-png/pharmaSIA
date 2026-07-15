@@ -72,7 +72,7 @@ export default function SellerPromotionsPage() {
         <div className="text-center py-16 bg-white rounded-xl border"><p className="text-gray-400">ยังไม่มีโปรโมชั่น</p></div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <table className="w-full text-sm">
+          <div class="overflow-x-auto"><table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-600">รหัส</th>
