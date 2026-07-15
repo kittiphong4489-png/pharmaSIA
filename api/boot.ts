@@ -3974,6 +3974,12 @@ if (env.isProduction) {
   });
 
   const { serve } = await import("@hono/node-server");
+  // ── Sub-categories table migration ──
+  try {
+    db.prepare("CREATE TABLE IF NOT EXISTS sub_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, nameTh TEXT NOT NULL, nameEn TEXT DEFAULT '', icon TEXT DEFAULT '💊', categoryId INTEGER NOT NULL REFERENCES categories(id), sortOrder INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, keywordPatterns TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP)").run();
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(subCategoryId)").run();
+    try { db.prepare("ALTER TABLE products ADD COLUMN subCategoryId INTEGER REFERENCES sub_categories(id)").run(); } catch {}
+  } catch {}
   // ── Auto-category migration: ป้องกันหมวดหมู่ถูกรีเซ็ต ──
   try {
     const db = getDb();
