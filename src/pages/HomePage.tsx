@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../lib/api";
 import { useSettings } from "../contexts/SettingsContext";
 import ProductCard from "../components/ProductCard";
-import LicenseBadge from "../components/LicenseBadge";
 import { Pill, Leaf, Apple, Droplets, Stethoscope, Baby, Wind, Coffee, PawPrint, Package, ShoppingBag, ChevronRight, ShieldCheck, Truck, CreditCard, TrendingUp, Phone, Mail, MessageCircle, LogIn, User } from "lucide-react";
 
 const CATEGORIES = [
