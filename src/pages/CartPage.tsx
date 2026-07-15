@@ -372,10 +372,11 @@ export default function CartPage() {
             <Link to="/products" className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 text-sm">🛍️ เลือกสินค้าต่อ</Link>
             <Link to="/" className="inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 border border-gray-200 text-sm">🏠 หน้าแรก</Link>
           </div>
-        <div className="mt-4">
-          <Link to={`/account/orders/${orderResult.orderId}`} className="text-sm text-red-500 hover:text-red-700 underline">
-            ❌ ยกเลิกออเดอร์นี้
-          </Link>
+          <div className="mt-2">
+            <Link to={`/account/orders/${orderResult.orderId}`} className="text-sm text-red-500 hover:text-red-700 underline">
+              ❌ ยกเลิกออเดอร์นี้
+            </Link>
+          </div>
         </div>
       </div>
     );
