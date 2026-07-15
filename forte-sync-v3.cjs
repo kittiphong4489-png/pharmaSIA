@@ -30,9 +30,6 @@ try {
   process.exit(1);
 }
 
-// Web fetch polyfill for older Node
-const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
-
 // ── Report data ──
 const report = {
   startTime: new Date().toISOString(),
@@ -51,13 +48,14 @@ const report = {
 // ── Helpers ──
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function getHeaders(sessionId) {
+function getHeaders(sessionId, referer) {
   return {
     "User-Agent": USER_AGENT,
     "Accept-Language": "th-TH,th;q=0.9",
     "Cookie": `ASP.NET_SessionId=${sessionId}`,
-    "Referer": `${FORTE_BASE}/pages/account/login.aspx`,
+    "Referer": referer || `${FORTE_BASE}/pages/account/login.aspx`,
     "X-Requested-With": "XMLHttpRequest",
+    "Content-Type": "application/json; charset=utf-8",
   };
 }
 
@@ -94,25 +92,31 @@ async function fetchProducts(sessionId) {
   const PAGE_SIZE = 100;
   
   // Get total count first
-  const countRes = await fetch(`${FORTE_BASE}/ws/srv.php?fp=invt_fg&f_page=1&f_limit=1`, {
-    headers: getHeaders(sessionId),
+  const countRes = await fetch(`${FORTE_BASE}/pages/product/ProductUtil.aspx/GetProduct`, {
+    method: "POST",
+    headers: getHeaders(sessionId, `${FORTE_BASE}/pages/product/product_table.aspx`),
+    body: JSON.stringify({ data: { recordperpage: 1, page: 1, prodnam: "", vendorname: "", categcod: "", ordercolumn: "ชื่อสินค้า" } }),
   });
   const countText = await countRes.text();
   let totalCount = 0;
   try {
     const parsed = JSON.parse(countText);
-    totalCount = parsed.total || parsed.recordsTotal || parsed.recordsFiltered || 0;
+    // V2 format: d.recordsFiltered
+    totalCount = parsed.d?.recordsFiltered || parsed.d?.recordsTotal || parsed.recordsTotal || parsed.recordsFiltered || 0;
   } catch {
-    totalCount = 6400; // estimate
+    totalCount = 6400;
   }
   console.log(`   พบทั้งหมด ~${totalCount} รายการ`);
   
   // Fetch all pages
   let page = 1;
   while (true) {
-    const res = await fetch(`${FORTE_BASE}/ws/srv.php?fp=invt_fg&f_page=${page}&f_limit=${PAGE_SIZE}`, {
-      headers: getHeaders(sessionId),
+    const res = await fetch(`${FORTE_BASE}/pages/product/ProductUtil.aspx/GetProduct`, {
+      method: "POST",
+      headers: getHeaders(sessionId, `${FORTE_BASE}/pages/product/product_table.aspx`),
+      body: JSON.stringify({ data: { recordperpage: PAGE_SIZE, page, prodnam: "", vendorname: "", categcod: "", ordercolumn: "ชื่อสินค้า" } }),
     });
+    if (res.status === 401) { console.error("❌ Session expired"); break; }
     const text = await res.text();
     let data;
     try {
@@ -123,7 +127,8 @@ async function fetchProducts(sessionId) {
       break;
     }
 
-    const items = data.data || data.items || data.rows || data || [];
+    // V2 format: data.d === array of products
+    const items = data.d || data.data || data.items || data.rows || data || [];
     if (!Array.isArray(items)) {
       console.log(`   ✅ ดึงครบแล้ว (page ${page})`);
       break;

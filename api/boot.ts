@@ -725,6 +725,16 @@ app.get("/api/orders/:id", async (c) => {
 });
 
 // Serve QR PromptPay image (fixed, no dynamic generation)
+app.get("/api/images/no-image.svg", async (c) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+    <rect width="400" height="400" fill="#f8f8f8"/>
+    <text x="200" y="170" text-anchor="middle" font-family="Arial" font-size="64">📷</text>
+    <text x="200" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#999">ไม่มีรูปสินค้า</text>
+    <text x="200" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#bbb">No Image Available</text>
+  </svg>`;
+  return c.newResponse(svg, 200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=604800" });
+});
+
 app.get("/api/images/qr-promptpay.jpg", async (c) => {
   try {
     const fs = await import("fs");

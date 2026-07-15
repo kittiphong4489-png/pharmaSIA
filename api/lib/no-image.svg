@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f0f0f0"/>
+  <text x="200" y="160" text-anchor="middle" font-family="Arial" font-size="60" fill="#cccccc">📷</text>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial" font-size="18" fill="#aaaaaa">ไม่มีรูปสินค้า</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Arial" font-size="12" fill="#bbbbbb">No Image Available</text>
+</svg>

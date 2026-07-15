@@ -39,12 +39,12 @@ export function ProductCard({ product }: { product: Product }) {
               alt={product.nameTh}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               onError={(e) => { 
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).parentElement!.querySelector('.fallback-icon')?.classList.remove('hidden');
+                (e.target as HTMLImageElement).src = '/api/images/no-image.svg';
               }}
             />
-          ) : null}
-          <div className={`text-5xl transition-transform duration-300 fallback-icon ${product.image ? 'hidden' : ''}`}>💊</div>
+          ) : (
+            <img src="/api/images/no-image.svg" alt="no image" className="w-24 h-24 opacity-40" />
+          )}
           {(product.stock ?? 0) <= 0 && (
             <span className="absolute top-3 left-3 px-3 py-1 bg-gray-800/80 text-white text-xs font-bold rounded-md backdrop-blur-sm">
               หมด
