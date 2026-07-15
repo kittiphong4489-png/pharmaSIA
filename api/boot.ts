@@ -79,6 +79,89 @@ initDb().then(() => {
 });
 startDbWatchdog();
 
+// ── Sub-categories API ──
+
+app.get("/api/sub-categories", async (c) => {
+  try {
+    const db = getDb();
+    const catId = c.req.query("categoryId");
+    let sql = "SELECT s.*, c.nameTh as categoryName FROM sub_categories s LEFT JOIN categories c ON s.categoryId=c.id WHERE s.isActive=1";
+    const params: any[] = [];
+    if (catId) { sql += " AND s.categoryId=?"; params.push(parseInt(catId)); }
+    sql += " ORDER BY s.sortOrder";
+    return c.json(db.prepare(sql).all(...params));
+  } catch (e: any) { return c.json([], 500); }
+});
+
+app.post("/api/sub-categories", async (c) => {
+  try {
+    const db = getDb();
+    const body = await c.req.json();
+    db.prepare("INSERT INTO sub_categories (nameTh, nameEn, icon, categoryId, sortOrder, keywordPatterns) VALUES (?,?,?,?,?,?)")
+      .run(body.nameTh, body.nameEn||"", body.icon||"💊", body.categoryId, body.sortOrder||0, body.keywordPatterns||"");
+    return c.json({ success: true, id: (db.prepare("SELECT last_insert_rowid() as id").get() as any)?.id });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
+});
+
+app.put("/api/sub-categories/:id", async (c) => {
+  try {
+    const db = getDb();
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const allowed = ["nameTh","nameEn","icon","sortOrder","isActive","keywordPatterns","categoryId"];
+    const updates = Object.entries(body).filter(([k]) => allowed.includes(k));
+    if (!updates.length) return c.json({ success: false, error: "No valid fields" }, 400);
+    db.prepare(`UPDATE sub_categories SET ${updates.map(([k]) => k+"=?").join(",")}, updatedAt=datetime('now') WHERE id=?`)
+      .run(...updates.map(([,v]) => v), id);
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
+});
+
+app.delete("/api/sub-categories/:id", async (c) => {
+  try {
+    const db = getDb();
+    const id = parseInt(c.req.param("id"));
+    db.prepare("UPDATE sub_categories SET isActive=0 WHERE id=?").run(id);
+    db.prepare("UPDATE products SET subCategoryId=NULL WHERE subCategoryId=?").run(id);
+    return c.json({ success: true });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
+});
+
+// ── Auto-assign subcategories ──
+app.post("/api/sub-categories/assign", async (c) => {
+  try {
+    const db = getDb();
+    const body = await c.req.json();
+    const dryRun = body.dryRun === true;
+    const catId = parseInt(body.categoryId || "1");
+    
+    const subs = db.prepare("SELECT * FROM sub_categories WHERE categoryId=? AND isActive=1 AND keywordPatterns!='' ORDER BY sortOrder").all(catId) as any[];
+    const products = db.prepare("SELECT id, nameTh, nameEn, genericNameTh, sku FROM products WHERE categoryId=? AND (subCategoryId IS NULL OR subCategoryId=0)").all(catId) as any[];
+    
+    let assigned = 0;
+    for (const p of products) {
+      const text = `${p.nameTh||""} ${p.nameEn||""} ${p.genericNameTh||""}`.toLowerCase();
+      for (const sub of subs) {
+        const patterns = (sub.keywordPatterns||"").split(",").map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+        if (patterns.some((pat: string) => text.includes(pat))) {
+          if (!dryRun) db.prepare("UPDATE products SET subCategoryId=? WHERE id=?").run(sub.id, p.id);
+          assigned++;
+          break;
+        }
+      }
+    }
+    
+    return c.json({
+      success: true,
+      dryRun,
+      totalProducts: products.length,
+      assigned: assigned,
+      remaining: products.length - assigned,
+    });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
+});
+
+
 // ── REST API ──
 
 app.get("/api/categories", async (c) => {
