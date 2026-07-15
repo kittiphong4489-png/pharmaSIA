@@ -13,13 +13,13 @@ export default function SellerProductsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, status: "active", categoryId: 1 });
+  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, costPrice: 0, stock: 0, status: "active", categoryId: 1 });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
   // Add product
   const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ nameTh: "", nameEn: "", price: 0, stock: 0, sku: "" });
+  const [addForm, setAddForm] = useState({ sku: "", nameTh: "", nameEn: "", price: 0, costPrice: 0, stock: 0, categoryId: 1 });
 
   // Category management
   const [showCatModal, setShowCatModal] = useState(false);
@@ -45,7 +45,7 @@ export default function SellerProductsPage() {
 
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
-    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn, price: p.price, stock: p.stock, status: p.status, categoryId: p.categoryId || 1 });
+    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn || "", price: p.price, costPrice: p.costPrice || 0, stock: p.stock, status: p.status, categoryId: p.categoryId });
   };
 
   const handleSave = async () => {
@@ -163,7 +163,10 @@ export default function SellerProductsPage() {
                 <th className="pb-3 font-medium">SKU</th>
                 <th className="pb-3 font-medium">ชื่อสินค้า</th>
                 <th className="pb-3 font-medium">หมวดหมู่</th>
-                <th className="pb-3 font-medium">ราคา</th>
+                <th className="pb-3 font-medium">ราคาขาย</th>
+                <th className="pb-3 font-medium">ต้นทุน</th>
+                <th className="pb-3 font-medium">กำไร%</th>
+                <th className="pb-3 font-medium">กำไร฿</th>
                 <th className="pb-3 font-medium">สต็อก</th>
                 <th className="pb-3 font-medium">สถานะ</th>
                 <th className="pb-3 font-medium"></th>
@@ -188,6 +191,16 @@ export default function SellerProductsPage() {
                       <td className="py-3">
                         <input type="number" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: parseFloat(e.target.value) || 0})}
                           className="w-24 px-2 py-1 border rounded text-sm" />
+                      </td>
+                      <td className="py-3">
+                        <input type="number" value={editForm.costPrice} onChange={(e) => setEditForm({...editForm, costPrice: parseFloat(e.target.value) || 0})}
+                          className="w-24 px-2 py-1 border rounded text-sm text-orange-600" />
+                      </td>
+                      <td className="py-3 text-gray-500 text-xs">
+                        {editForm.costPrice > 0 ? `${Math.round((editForm.price - editForm.costPrice) / editForm.costPrice * 100)}%` : "-"}
+                      </td>
+                      <td className="py-3 text-gray-500 text-xs">
+                        {editForm.costPrice > 0 ? `฿${(editForm.price - editForm.costPrice).toFixed(2)}` : "-"}
                       </td>
                       <td className="py-3">
                         <input type="number" value={editForm.stock} onChange={(e) => setEditForm({...editForm, stock: parseInt(e.target.value) || 0})}
@@ -217,6 +230,23 @@ export default function SellerProductsPage() {
                         </span>
                       </td>
                       <td className="py-3 text-blue-600 font-medium">฿{p.price}</td>
+                      <td className="py-3 text-orange-600 font-medium">
+                        {p.costPrice > 0 ? `฿${p.costPrice}` : "-"}
+                      </td>
+                      <td className="py-3 font-medium">
+                        {p.costPrice > 0 ? (
+                          <span className={`${(p.price - p.costPrice) / p.costPrice > 0.2 ? "text-green-600" : "text-red-600"}`}>
+                            {Math.round((p.price - p.costPrice) / p.costPrice * 100)}%
+                          </span>
+                        ) : "-"}
+                      </td>
+                      <td className="py-3 font-medium">
+                        {p.costPrice > 0 ? (
+                          <span className={`${(p.price - p.costPrice) > 0 ? "text-green-600" : "text-red-600"}`}>
+                            ฿{(p.price - p.costPrice).toFixed(2)}
+                          </span>
+                        ) : "-"}
+                      </td>
                       <td className="py-3">{p.stock}</td>
                       <td className="py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${p.status === "active" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
@@ -282,10 +312,10 @@ export default function SellerProductsPage() {
               <input placeholder="ชื่อสินค้า (ไทย) *" value={addForm.nameTh} onChange={(e) => setAddForm({...addForm, nameTh: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
               <input placeholder="ชื่อสินค้า (อังกฤษ)" value={addForm.nameEn} onChange={(e) => setAddForm({...addForm, nameEn: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs text-gray-500">ราคา</label>
+                <div><label className="text-xs text-gray-500">ราคาขาย</label>
                   <input type="number" value={addForm.price} onChange={(e) => setAddForm({...addForm, price: +e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-                <div><label className="text-xs text-gray-500">สต็อก</label>
-                  <input type="number" value={addForm.stock} onChange={(e) => setAddForm({...addForm, stock: +e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+                <div><label className="text-xs text-gray-500">ต้นทุน</label>
+                  <input type="number" value={addForm.costPrice} onChange={(e) => setAddForm({...addForm, costPrice: +e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm text-orange-600" /></div>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
