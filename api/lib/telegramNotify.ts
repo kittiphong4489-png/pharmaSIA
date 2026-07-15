@@ -116,6 +116,35 @@ export async function handleTelegramCallback(body: any): Promise<string> {
   const chatId = process.env.TELEGRAM_CHAT_ID || "";
   if (!token || !chatId) return "No token";
 
+  // ── Handle text messages (chat replies) ──
+  const message = body?.message;
+  const messageText = message?.text || "";
+  if (messageText && !body?.callback_query) {
+    // Check if it's a chat reply: "reply 123 message here"
+    const replyMatch = messageText.match(/^reply\s+(\d+)\s+(.+)$/i);
+    if (replyMatch) {
+      const convId = parseInt(replyMatch[1]);
+      const replyText = replyMatch[2];
+      try {
+        const { getDb } = await import("../queries/connection");
+        const db = getDb();
+        db.prepare("INSERT INTO chat_messages (conversationId, role, content, senderName) VALUES (?,'pharmacist',?,'เภสัชกร')").run(convId, replyText);
+        db.prepare("UPDATE chat_conversations SET lastMessageAt=datetime('now'), isRead=1 WHERE id=?").run(convId);
+        // Confirm reply sent
+        await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: `✅ ตอบกลับไปยังแชท #${convId} แล้ว`, parse_mode: "Markdown" }),
+        });
+        return `chat_reply:${convId}`;
+      } catch (e: any) {
+        console.error("[Telegram] Chat reply error:", e?.message);
+        return `error:${e?.message}`;
+      }
+    }
+    return "not a reply command";
+  }
+
+  // ── Handle inline keyboard callbacks (orders) ──
   const callbackData = body?.callback_query?.data || "";
   const callbackId = body?.callback_query?.id || "";
   const messageId = body?.callback_query?.message?.message_id || 0;

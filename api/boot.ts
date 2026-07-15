@@ -196,9 +196,7 @@ app.post("/api/chat/customer", async (c) => {
       const token = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
       if (token && chatId) {
-        const text = `🛎 *ข้อความใหม่จากลูกค้า*\n👤 ${customerName||"ลูกค้า"}
-📱 ${customerPhone||"-"}
-💬 ${message}\n⏰ ${new Date().toLocaleTimeString('th-TH')}`;
+        const text = `🛎 *ข้อความใหม่จากลูกค้า*\n👤 ${customerName||"ลูกค้า"}\n📱 ${customerPhone||"-"}\n💬 ${message}\n⏰ ${new Date().toLocaleTimeString('th-TH')}\n\n_ตอบกลับ: reply ${conv.id} ตามด้วยข้อความ_`;
         fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: "POST", headers: {"Content-Type":"application/json"},
           body: JSON.stringify({chat_id: chatId, text, parse_mode:"Markdown"}),
@@ -4266,7 +4264,7 @@ if (env.isProduction) {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (botToken) {
-      const webhookUrl = `https://PharmaSIA-1783398975-production.up.railway.app/telegram/callback`;
+      const webhookUrl = `https://pharmasia2025.up.railway.app/telegram/callback`;
       fetch(`https://api.telegram.org/bot${botToken}/setWebhook?url=${webhookUrl}`, {
         signal: AbortSignal.timeout(5000),
       }).then(r => r.json()).then(d => {
