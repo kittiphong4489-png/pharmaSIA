@@ -3109,8 +3109,6 @@ app.get("/api/notifications/unread-count", async (c) => {
     return c.json({ unread: result?.unread || 0 });
   } catch (e: any) {
     return c.json({ unread: 0 });
-  }
-});
 
 // ── Packing / Packing Slip API ──
 
@@ -3441,33 +3439,31 @@ app.post("/api/packing/:slipId/verify-fefo", async (c) => {
   }
 });
 
-// ── Line OA Integration ──
-// POST /api/line/notify — ส่ง Line Notify (token ฟรี)
-app.post("/api/line/notify", async (c) => {
+// ── Telegram Notification ──
+// POST /api/telegram/notify — ส่ง Telegram notification
+app.post("/api/telegram/notify", async (c) => {
   try {
     const payload = await requireAdmin(c);
-    if (!payload) return new Response('{"error":"Unauthorized"}', { status: 401, headers: { "Content-Type": "application/json" } });
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
     const body = await c.req.json();
-    const { message, type } = body;
+    const { message, chatId } = body;
     if (!message) return c.json({ success: false, error: "ต้องระบุข้อความ" }, 400);
 
-    const token = process.env.LINE_NOTIFY_TOKEN || "";
-    if (!token) return c.json({ success: false, error: "ไม่ได้ตั้งค่า LINE Notify Token" }, 400);
+    const token = process.env.TELEGRAM_BOT_TOKEN || "";
+    if (!token) return c.json({ success: false, error: "ไม่ได้ตั้งค่า Telegram Bot Token" }, 400);
+    const targetChat = chatId || process.env.TELEGRAM_CHAT_ID || "";
+    if (!targetChat) return c.json({ success: false, error: "ไม่ได้ตั้งค่า Telegram Chat ID" }, 400);
 
-    const res = await fetch("https://notify-api.line.me/api/notify", {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: new URLSearchParams({ message }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: targetChat, text: message, parse_mode: "Markdown" }),
     });
     const data = await res.json();
-    if (!res.ok) return c.json({ success: false, error: data?.message || "ส่ง Line Notify ล้มเหลว" }, 502);
-
+    if (!res.ok) return c.json({ success: false, error: data?.description || "ส่งล้มเหลว" }, 502);
     return c.json({ success: true });
-  } catch (e: any) {
-    return c.json({ success: false, error: e?.message }, 500);
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 500); }
+});
   }
 });
 

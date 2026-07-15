@@ -139,40 +139,38 @@ export default function SellerSettingsPage() {
         </button>
       </div>
 
-      {/* LINE Notify Section */}
+      {/* Telegram Notification Section */}
       <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-2">📢 แจ้งเตือน LINE</h2>
-        <p className="text-sm text-gray-500 mb-4">รับแจ้งเตือนเมื่อมีออเดอร์ใหม่ผ่าน LINE Notify</p>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">🤖 แจ้งเตือน Telegram</h2>
+        <p className="text-sm text-gray-500 mb-4">รับแจ้งเตือนออเดอร์ใหม่ผ่าน Telegram Bot (ตั้งค่าใน Railway Environment)</p>
         
         <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">LINE Notify Token</label>
-            <input type="password" value={lineToken} onChange={(e) => setLineToken(e.target.value)}
-              placeholder="กรอก LINE Notify Token" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-sm font-medium text-blue-800">✅ Telegram Bot กำลังทำงาน</p>
+            <p className="text-xs text-blue-600 mt-1">Bot: @PharmaSIAordar_bot</p>
+            <p className="text-xs text-blue-600">Chat ID: 8308720014</p>
           </div>
           
           <button onClick={async () => {
-            if (!lineToken) { alert("กรุณากรอก LINE Notify Token"); return; }
             try {
-              const d = await apiClient("/api/settings", {
-                method: "PUT", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lineNotifyToken: lineToken }),
+              const d = await apiClient("/api/telegram/notify", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "🛎 *ทดสอบการแจ้งเตือน*\n\n✅ ระบบ Telegram พร้อมทำงานแล้ว! 🚀" }),
               });
-              if (d.success) alert("✅ ตั้งค่า LINE Notify แล้ว");
-              else alert("❌ " + (d.error || "Error"));
+              if (d.success) alert("✅ ส่งข้อความทดสอบไปที่ Telegram แล้ว");
+              else alert("❌ " + (d.error || "ส่งไม่สำเร็จ"));
             } catch { alert("เกิดข้อผิดพลาด"); }
-          }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
-            ตั้งค่า LINE Notify
+          }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            ทดสอบส่ง Telegram 📨
           </button>
 
           <details className="text-xs text-gray-500 mt-3">
-            <summary className="cursor-pointer text-blue-600 hover:underline">วิธีขอ Token</summary>
+            <summary className="cursor-pointer text-blue-600 hover:underline">วิธีตั้งค่า Telegram Bot</summary>
             <ol className="mt-2 space-y-1 pl-4 list-decimal">
-              <li>ไปที่ <a href="https://notify-bot.line.me/" target="_blank" rel="noreferrer" className="text-blue-600 underline">notify-bot.line.me</a></li>
-              <li>Login ด้วย LINE ของคุณ</li>
-              <li>ไปที่ "My Page" → "Generate token"</li>
-              <li>เลือกห้อง/กลุ่มที่ต้องการรับแจ้งเตือน</li>
-              <li>Copy Token มาใส่ด้านบน</li>
+              <li>พิมพ์ @BotFather ใน Telegram → /newbot</li>
+              <li>ตั้งชื่อ Bot → ได้ TELEGRAM_BOT_TOKEN</li>
+              <li>ส่งข้อความหา Bot → /getUpdates → ได้ CHAT_ID</li>
+              <li>ตั้งค่าใน Railway: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID</li>
             </ol>
           </details>
         </div>

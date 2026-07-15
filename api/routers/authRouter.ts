@@ -65,7 +65,7 @@ export const authRouter = createRouter({
       const db = getDb();
       const user = db.prepare("SELECT id, fullName, email, phone, role, tier, passwordHash FROM users WHERE email = ? AND isActive = 1").get(input.email) as any;
       if (!user) return { success: false, error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
-      if (!user.passwordHash) return { success: false, error: "บัญชีนี้ใช้ OAuth กรุณาเข้าสู่ระบบด้วย Google หรือ LINE" };
+      if (!user.passwordHash) return { success: false, error: "บัญชีนี้ใช้ OAuth กรุณาเข้าสู่ระบบด้วย Google" };
 
       const valid = verifyPassword(input.password, user.passwordHash);
       if (!valid) return { success: false, error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
