@@ -215,11 +215,9 @@ export async function initDb(): Promise<void> {
   try { db.exec("CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, type TEXT DEFAULT 'info', title TEXT DEFAULT '', message TEXT DEFAULT '', isRead INTEGER DEFAULT 0, createdAt TEXT DEFAULT CURRENT_TIMESTAMP, entityType TEXT DEFAULT '', entityId INTEGER)"); } catch {}
   for (const col of ["entityType", "entityId"]) { try { db.exec(`ALTER TABLE notifications ADD COLUMN ${col} TEXT`); } catch {} }
   for (const col of ["district", "province", "zip"]) { try { db.exec(`ALTER TABLE user_addresses ADD COLUMN ${col} TEXT DEFAULT ''`); } catch {} }
-  // Fix category mapping - comprehensive keyword-based matching
-  // First, reset to NULL for products that need reassignment
-  try { db.exec("UPDATE products SET categoryId = NULL WHERE categoryId NOT IN (1,2,3,4,5,6,7,8,9,10)"); } catch {}
-  // Priority: most specific patterns first (last one wins for each product)
-  try { db.exec("UPDATE products SET categoryId = 1"); } catch {} // Default: all medicines
+  // Category mapping is handled by auto-migration in boot.ts
+  // Only fix NULL categories
+  try { db.exec("UPDATE products SET categoryId = 10 WHERE categoryId IS NULL"); } catch {}
   try { db.exec("UPDATE products SET categoryId = 9 WHERE nameTh LIKE '%สัตว์%' OR nameTh LIKE '%แมว%' OR nameTh LIKE '%หมา%' OR nameTh LIKE '%สุนัข%' OR nameTh LIKE '%pet%'"); } catch {}
   try { db.exec("UPDATE products SET categoryId = 2 WHERE nameTh LIKE '%สมุนไพร%' OR nameTh LIKE '%Herbs%' OR nameTh LIKE '%herb%' OR nameTh LIKE '%แผนโบราณ%' OR nameTh LIKE '%ยาจีน%'"); } catch {}
   try { db.exec("UPDATE products SET categoryId = 6 WHERE nameTh LIKE '%เด็ก%' OR nameTh LIKE '%baby%' OR nameTh LIKE '%Baby%' OR nameTh LIKE '%ทารก%' OR nameTh LIKE '%นมผง%' OR nameTh LIKE '%นมเด็ก%' OR nameTh LIKE '%ผ้าอ้อม%' OR nameTh LIKE '%ขวดนม%' OR nameTh LIKE '%แม่และเด็ก%'"); } catch {}

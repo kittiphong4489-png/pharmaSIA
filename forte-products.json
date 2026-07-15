@@ -1127,7 +1127,7 @@
     "nameEn": "อัลเบน-วีซี กล่อง2เม็ด",
     "genericNameTh": "Albendazole",
     "category": "ยาถ่ายพยาธิ",
-    "costPrice": 4.25,
+    "costPrice": 4,
     "barcode": "",
     "vendorcod": "VESCO",
     "stockStatus": "in_stock"
@@ -2183,7 +2183,7 @@
     "nameEn": "AMOXI T.O 500; 50x10's(ฟ้า-เขียว;TO) amoxicillin TO",
     "genericNameTh": "Amoxycillin",
     "category": "ยาฆ่าเขื้อแบคทีเรีย เชื้อรา ไวรัส",
-    "costPrice": 11.75,
+    "costPrice": 11.25,
     "barcode": "",
     "vendorcod": "TO",
     "stockStatus": "in_stock"
@@ -2937,6 +2937,17 @@
     "stockStatus": "in_stock"
   },
   {
+    "sku": "FT-41129",
+    "nameTh": "AQUA KARE น้ำสเตอไรล์ 500ml.(ANB)",
+    "nameEn": "น้ำสเตอไรด์ 500มล(Aqua kare)",
+    "genericNameTh": "Sterile Water",
+    "category": "น้ำเกลือ IV",
+    "costPrice": 27.75,
+    "barcode": "",
+    "vendorcod": "ANB",
+    "stockStatus": "in_stock"
+  },
+  {
     "sku": "FT-11259",
     "nameTh": "AQUA MARIS BABY NASAL SPRAY 50ml. (SHK)",
     "nameEn": "อควา มาริส เบบี้ 50มล",
@@ -3294,7 +3305,7 @@
     "nameEn": "ASIATAPP INFANT DROPS 15ml.(ASIAN-P)",
     "genericNameTh": "Brompheniramine+Phenylephrine",
     "category": "ยาระบบทางเดินหายใจ",
-    "costPrice": 18.25,
+    "costPrice": 20.25,
     "barcode": "",
     "vendorcod": "ASIAN-P",
     "stockStatus": "in_stock"
@@ -3393,7 +3404,7 @@
     "nameEn": "asmath asthma SYRUP 60ml. มีกล่อง (TERBUTALINE;ASIAN)",
     "genericNameTh": "",
     "category": "สินค้ายังไม่จัดหมวด",
-    "costPrice": 16.5,
+    "costPrice": 17,
     "barcode": "",
     "vendorcod": "ASIAN-P",
     "stockStatus": "in_stock"
@@ -5791,7 +5802,7 @@
     "nameEn": "เบต้าซาลิค 15 ก LSP",
     "genericNameTh": "Betamethasone+Salicylic acid",
     "category": "ยาใช้ภายนอก ยาครีม",
-    "costPrice": 36,
+    "costPrice": 39.75,
     "barcode": "",
     "vendorcod": "LSP",
     "stockStatus": "in_stock"
@@ -7089,7 +7100,7 @@
     "nameEn": "syrup น้ำ บรอมเฮ็ก แก้ไอ เปลือย (PATAR) bromhex syr",
     "genericNameTh": "Bromhexines",
     "category": "ยาระบบทางเดินหายใจ",
-    "costPrice": 10,
+    "costPrice": 11,
     "barcode": "",
     "vendorcod": "PATAR",
     "stockStatus": "in_stock"
@@ -8112,7 +8123,7 @@
     "nameEn": "แคลเซียม กลูโคเนท ฉีด ANB",
     "genericNameTh": "CALCIUM W/ ALL FORMS",
     "category": "ยาฉีด",
-    "costPrice": 55,
+    "costPrice": 47.5,
     "barcode": "",
     "vendorcod": "ANB",
     "stockStatus": "in_stock"
@@ -11775,7 +11786,7 @@
     "nameEn": "CONFORMING BANDAGE 2\"x5yds 12ม้วน(TTJ)",
     "genericNameTh": "GAUZE;ผ้าก๊อส;ผ้าปิดแผล",
     "category": "Med supply; เครื่องมือ อุปกรณ์ เวชภัณฑ์ทางการแพทย์",
-    "costPrice": 5,
+    "costPrice": 3.75,
     "barcode": "",
     "vendorcod": "TTJI",
     "stockStatus": "in_stock"
@@ -11841,7 +11852,7 @@
     "nameEn": "กอซม้วน*202m นิ้ว ชนิดขอบไม่รุ่ยKTD",
     "genericNameTh": "GAUZE;ผ้าก๊อส;ผ้าปิดแผล",
     "category": "วัสดุทางการแพทย์",
-    "costPrice": 14,
+    "costPrice": 14.25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -13524,7 +13535,7 @@
     "nameEn": "ยาสมิน เดอราเรซ yasmin derarez derraraz deraraz derrarez",
     "genericNameTh": "ยาคุม ;CONTRACEPTIVE",
     "category": "ยาคุมกำเนิด ยาฮอร์โมน",
-    "costPrice": 236.5,
+    "costPrice": 232.5,
     "barcode": "",
     "vendorcod": "TNP",
     "stockStatus": "in_stock"
@@ -13821,7 +13832,7 @@
     "nameEn": "DERMONAR LOTION 30ml.(CLOBETASOL;LSP)",
     "genericNameTh": "Clobetasol",
     "category": "ยาใช้ภายนอก ยาครีม",
-    "costPrice": 55.25,
+    "costPrice": 48.25,
     "barcode": "",
     "vendorcod": "LSP",
     "stockStatus": "in_stock"
@@ -14855,7 +14866,7 @@
     "nameEn": "DIOCTOL 10x10's (DOCUSATE SODIUM 100mg.;LSP)",
     "genericNameTh": "Docusate Sodium",
     "category": "ยาระบบทางเดินอาหาร",
-    "costPrice": 20.5,
+    "costPrice": 22.5,
     "barcode": "",
     "vendorcod": "LSP",
     "stockStatus": "in_stock"
@@ -15548,7 +15559,7 @@
     "nameEn": "โดเสท แผง 10เม็ด CP",
     "genericNameTh": "Omeprazole",
     "category": "ยาระบบทางเดินอาหาร",
-    "costPrice": 5,
+    "costPrice": 4.75,
     "barcode": "",
     "vendorcod": "CPL",
     "stockStatus": "in_stock"
@@ -16571,7 +16582,7 @@
     "nameEn": "depo m a  ดีโป้ .(MEDROXYPROGESTERONE ;UMEDA)",
     "genericNameTh": "ยาคุมฉีดชนิดฮอร์โมนเดี่ยว และฮอร์โมนรวม ;Depot Medroxyprogesterone, Norethisterone, Estradiol",
     "category": "ยาฉีด",
-    "costPrice": 11.25,
+    "costPrice": 11.75,
     "barcode": "",
     "vendorcod": "UMEDA",
     "stockStatus": "in_stock"
@@ -17737,7 +17748,7 @@
     "nameEn": "EUC HYALURON-FILLER+ELASTICITY DAY Cream 50ml",
     "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
     "category": "เวชสำอางค์",
-    "costPrice": 2088,
+    "costPrice": 2173,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -17748,7 +17759,7 @@
     "nameEn": "EUC HYALURON-FILLER+ELASTICITY NIGTH CREAM 50ml.",
     "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
     "category": "เวชสำอางค์",
-    "costPrice": 2243,
+    "costPrice": 2367,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -17795,6 +17806,17 @@
     "costPrice": 1380,
     "barcode": "",
     "vendorcod": "",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70678",
+    "nameTh": "EUC OMEGA ATO-CALMING BATH & SHOWER OIL 400ml.",
+    "nameEn": "",
+    "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
+    "category": "เวชสำอางค์",
+    "costPrice": 648.25,
+    "barcode": "",
+    "vendorcod": "FT2018",
     "stockStatus": "in_stock"
   },
   {
@@ -18260,6 +18282,17 @@
     "stockStatus": "in_stock"
   },
   {
+    "sku": "FT-70676",
+    "nameTh": "EUC SAVE20% BRT BODT LOTION 250ml. X2",
+    "nameEn": "",
+    "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
+    "category": "เวชสำอางค์",
+    "costPrice": 815.25,
+    "barcode": "",
+    "vendorcod": "FT2018",
+    "stockStatus": "in_stock"
+  },
+  {
     "sku": "FT-70308",
     "nameTh": "EUC Serum 30ML + Hyaluron Spray Mist 150ML.",
     "nameEn": "",
@@ -18288,6 +18321,17 @@
     "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
     "category": "เวชสำอางค์",
     "costPrice": 2329,
+    "barcode": "",
+    "vendorcod": "FT2018",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70677",
+    "nameTh": "EUC SPL Booster serum30ml+essence 100ml.set SAVE 50%",
+    "nameEn": "",
+    "genericNameTh": "Eucerin ;ผลิตภัณฑ์ยูเซอริน",
+    "category": "เวชสำอางค์",
+    "costPrice": 2522,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -19519,7 +19563,7 @@
     "nameEn": "ไฟบริล 200 มก กล่อง3*10เม็ด",
     "genericNameTh": "Fenofibrates",
     "category": "ยาโรคเรื้อรัง หัวใจ ความดัน ต่อมไร้ท่อ สมอง",
-    "costPrice": 30,
+    "costPrice": 24.5,
     "barcode": "",
     "vendorcod": "UMEDA",
     "stockStatus": "in_stock"
@@ -19929,6 +19973,17 @@
     "costPrice": 1212.5,
     "barcode": "",
     "vendorcod": "PROSP",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70669",
+    "nameTh": "FINASCIA 3x10's (FINASTERIDE 1mg. ; MILIMED)",
+    "nameEn": "FINASCIA 3x10's (FINASTERIDE 1mg. ; MILIMED)",
+    "genericNameTh": "Finasteride",
+    "category": "ยาโรคเรื้อรัง หัวใจ ความดัน ต่อมไร้ท่อ สมอง",
+    "costPrice": 188.25,
+    "barcode": "",
+    "vendorcod": "MTB",
     "stockStatus": "in_stock"
   },
   {
@@ -20465,7 +20520,7 @@
     "nameEn": "เฟลมเมกซ์ คิดส์ ไซรัป",
     "genericNameTh": "Carbocysteine",
     "category": "ยาระบบทางเดินหายใจ",
-    "costPrice": 37.75,
+    "costPrice": 33.25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -21169,7 +21224,7 @@
     "nameEn": "ฟิวซิดิน-เอช 5กรัม",
     "genericNameTh": "Fusidic Acid;FUCIDIN",
     "category": "ยาใช้ภายนอก ยาครีม",
-    "costPrice": 95.6,
+    "costPrice": 98,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -22313,7 +22368,7 @@
     "nameEn": "GLIPIZIDE 50x10's /ST9A",
     "genericNameTh": "Glipizide",
     "category": "ยาโรคเรื้อรัง หัวใจ ความดัน ต่อมไร้ท่อ สมอง",
-    "costPrice": 3,
+    "costPrice": 2.75,
     "barcode": "",
     "vendorcod": "ANB",
     "stockStatus": "in_stock"
@@ -22555,7 +22610,7 @@
     "nameEn": "กลัยซีเดียบ แผง10เม็ด ชุมชน",
     "genericNameTh": "Glipizide",
     "category": "ยาโรคเรื้อรัง หัวใจ ความดัน ต่อมไร้ท่อ สมอง",
-    "costPrice": 7.25,
+    "costPrice": 6.75,
     "barcode": "",
     "vendorcod": "CCB",
     "stockStatus": "in_stock"
@@ -23441,6 +23496,17 @@
     "stockStatus": "in_stock"
   },
   {
+    "sku": "FT-70670",
+    "nameTh": "HANDY HERB ENER-G 12x2's (SAND-M)",
+    "nameEn": "HANDY HERB ENER-G 12x2's (SAND-M)",
+    "genericNameTh": "Vitamin B1-B6-B12",
+    "category": "วิตามิน เกลือแร่ ผลิตภัณฑ์เสริมอาหาร",
+    "costPrice": 14,
+    "barcode": "",
+    "vendorcod": "MTB",
+    "stockStatus": "in_stock"
+  },
+  {
     "sku": "FT-15049",
     "nameTh": "HARNAL OCAS 0.4mg 3x10's (TAMSULOSIN;DCL)",
     "nameEn": "ฮาร์นาล 0.4มก กล่อง 3*10แคปซูล",
@@ -24183,7 +24249,7 @@
     "nameEn": "ฮีรูดอยด์ ครีม 10ก",
     "genericNameTh": "Scar Care ;ผลิตภัณฑ์ลบรอยแปลเป็น",
     "category": "เวชสำอางค์",
-    "costPrice": 78.5,
+    "costPrice": 75,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -24414,7 +24480,7 @@
     "nameEn": "คลอเฟนิรามิน ฮิสต้าแทบ 100x100's(CPM;เหลืองกลม;CPL)",
     "genericNameTh": "Chlorpheniramines",
     "category": "ยาระบบทางเดินหายใจ",
-    "costPrice": 4.5,
+    "costPrice": 6.25,
     "barcode": "",
     "vendorcod": "CPL",
     "stockStatus": "in_stock"
@@ -24931,7 +24997,7 @@
     "nameEn": "I FEN SYRUP 60ml. มีกล่อง",
     "genericNameTh": "Ibuprofen",
     "category": "สินค้ายังไม่จัดหมวด",
-    "costPrice": 18,
+    "costPrice": 20.25,
     "barcode": "",
     "vendorcod": "PATAR",
     "stockStatus": "in_stock"
@@ -26268,6 +26334,39 @@
     "stockStatus": "in_stock"
   },
   {
+    "sku": "FT-70671",
+    "nameTh": "JELLY ME CUTI COLLAGEN 12x30g. สตรอ (SAND-M)**ขายขาด",
+    "nameEn": "JELLY ME CUTI COLLAGEN 12x30g. สตรอ (SAND-M)**ขายขาด",
+    "genericNameTh": "Collagen ;คอลลาเจน",
+    "category": "อาหารทางการแพทย์",
+    "costPrice": 14.25,
+    "barcode": "",
+    "vendorcod": "MTB",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70672",
+    "nameTh": "JELLY ME CUTI FIBER 12x30g. แอปเปิ้ลเขียว (SAND-M)*ขายขาด",
+    "nameEn": "JELLY ME CUTI FIBER 12x30g. แอปเปิ้ลเขียว (SAND-M)*ขายขาด",
+    "genericNameTh": "Bulk Laxative ;ยาเพิ่มปริมาณอุจจาระ ไฟเบอร์ (Fiber, Mucillin powder)",
+    "category": "ยาระบบทางเดินอาหาร",
+    "costPrice": 14.25,
+    "barcode": "",
+    "vendorcod": "MTB",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70673",
+    "nameTh": "JELLY ME CUTI ZINC 12x30g. พีช (SAND-M)*ขายขาด",
+    "nameEn": "JELLY ME CUTI ZINC 12x30g. พีช/ลิ้นจี่ (SAND-M)*ขายขาด",
+    "genericNameTh": "Collagen ;คอลลาเจน",
+    "category": "อาหารทางการแพทย์",
+    "costPrice": 14.25,
+    "barcode": "",
+    "vendorcod": "MTB",
+    "stockStatus": "in_stock"
+  },
+  {
     "sku": "FT-69007",
     "nameTh": "JELLYCOOL แผ่นเจลลดไข้เด็ก 1x3ซองx2ชิ้น (7S)",
     "nameEn": "kool fever",
@@ -27483,7 +27582,7 @@
     "nameEn": "KLINDAMYCIN-300; 10x10's(CLINDAMYCIN;UMEDA)",
     "genericNameTh": "Clindamycin",
     "category": "สินค้ายังไม่จัดหมวด",
-    "costPrice": 29.5,
+    "costPrice": 27.5,
     "barcode": "",
     "vendorcod": "UMEDA",
     "stockStatus": "in_stock"
@@ -31157,7 +31256,7 @@
     "nameEn": "Mega DHA-125 100แคปซูล (ไม่รับคืน)",
     "genericNameTh": "ผลิตภัณฑ์ เมก้า",
     "category": "วิตามิน เกลือแร่ ผลิตภัณฑ์เสริมอาหาร",
-    "costPrice": 86,
+    "costPrice": 99.25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -32422,7 +32521,7 @@
     "nameEn": "เมสโต้ TF แผง 10 เม็ด",
     "genericNameTh": "ยาช่วยย่อย ; Diasgest",
     "category": "ยาระบบทางเดินอาหาร",
-    "costPrice": 8,
+    "costPrice": 7,
     "barcode": "",
     "vendorcod": "UMEDA",
     "stockStatus": "in_stock"
@@ -32774,7 +32873,7 @@
     "nameEn": "ไมกานา แผง 10เม็ด (ไม่รับคืน)",
     "genericNameTh": "Ergotamine ;ยาแก้ปวดศีรษะไมเกรน (Migraine)",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 20.75,
+    "costPrice": 20.5,
     "barcode": "",
     "vendorcod": "TV",
     "stockStatus": "in_stock"
@@ -33302,7 +33401,7 @@
     "nameEn": "ยาสมิน ee 0.03mg + drospirnone 3mg estrogen",
     "genericNameTh": "ยาคุม ;CONTRACEPTIVE",
     "category": "ยาคุมกำเนิด ยาฮอร์โมน",
-    "costPrice": 174,
+    "costPrice": 138.5,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -35986,7 +36085,7 @@
     "nameEn": "โคลด์ ฮอท แพ็ค รียูสเอเบิล 3M-M เก่า 10x25cm ถุง hot classic",
     "genericNameTh": "Fever Patch ;แผ่นแปะลดไข้ แผ่นแปะเจลลดไข้ ประคบร้อนเย็น",
     "category": "วัสดุทางการแพทย์",
-    "costPrice": 149,
+    "costPrice": 131.75,
     "barcode": "",
     "vendorcod": "BJC",
     "stockStatus": "in_stock"
@@ -36253,6 +36352,17 @@
     "costPrice": 51.5,
     "barcode": "",
     "vendorcod": "FT2018",
+    "stockStatus": "in_stock"
+  },
+  {
+    "sku": "FT-70674",
+    "nameTh": "NITE CAP 10x10's (DIPHENHYDRAMINE 50mg. ; PROSP)",
+    "nameEn": "NITE CAP 10x10's (DIPHENHYDRAMINE 50mg. ; PROSP))",
+    "genericNameTh": "Diphenhydramine",
+    "category": "ยาระบบทางเดินหายใจ",
+    "costPrice": 31.75,
+    "barcode": "",
+    "vendorcod": "MTB",
     "stockStatus": "in_stock"
   },
   {
@@ -37669,7 +37779,7 @@
     "nameEn": "ONACINE 10x10's(NORGESIC;ม่วงเหลี่ยม;LSP)",
     "genericNameTh": "NORGESICS; Paracetamol+Ophenadrine",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 8,
+    "costPrice": 8.5,
     "barcode": "",
     "vendorcod": "LSP",
     "stockStatus": "in_stock"
@@ -38186,7 +38296,7 @@
     "nameEn": "ออจีสิค 500 เม็ด (เม็ดกลมส้ม ;ORPHENADRINE+PARACETAMOL)",
     "genericNameTh": "NORGESICS; Paracetamol+Ophenadrine",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 285,
+    "costPrice": 337,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -38681,7 +38791,7 @@
     "nameEn": "paracetamol para syrup พารา เด็ก น้ำ พาราเซตามอล para 120",
     "genericNameTh": "Paracetamol",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 10,
+    "costPrice": 11.75,
     "barcode": "",
     "vendorcod": "PATAR",
     "stockStatus": "in_stock"
@@ -38967,7 +39077,7 @@
     "nameEn": "ยาสีแดง para syrup paracetamol syrup พารา น้ำ เด็ก pediatric",
     "genericNameTh": "Paracetamol",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 9.5,
+    "costPrice": 10.5,
     "barcode": "",
     "vendorcod": "PATAR",
     "stockStatus": "in_stock"
@@ -40089,7 +40199,7 @@
     "nameEn": "ไพรอกซิแคม ฟอร์ท PB(กล่อง10แผง)",
     "genericNameTh": "Piroxicams",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 8.25,
+    "costPrice": 9.25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -42487,7 +42597,7 @@
     "nameEn": "RABUFEN 400mg.25x10's(ชมพูกลม;IBUPROFEN;MEDIC @",
     "genericNameTh": "Ibuprofen",
     "category": "ยาแก้ปวด ลดไข้ ยาคลายกล้ามเนื้อ",
-    "costPrice": 13.25,
+    "costPrice": 9.75,
     "barcode": "",
     "vendorcod": "ANB",
     "stockStatus": "in_stock"
@@ -43323,7 +43433,7 @@
     "nameEn": "โรวาติเนกซ์ แผง 10 เม็ด นิ่วในทางเดินปัสสาวะ",
     "genericNameTh": "Drugs Acting on the Genitto-Urinary System",
     "category": "ยาระบบทางเดินอาหาร",
-    "costPrice": 48,
+    "costPrice": 50,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -44962,7 +45072,7 @@
     "nameEn": "ซิลเวอร์เดิร์ม ครีม 25กรัม",
     "genericNameTh": "Silver Sulfadiazines",
     "category": "ยาใช้ภายนอก ยาครีม",
-    "costPrice": 31,
+    "costPrice": 33.75,
     "barcode": "",
     "vendorcod": "TO",
     "stockStatus": "in_stock"
@@ -45149,7 +45259,7 @@
     "nameEn": "SIPASCOL SYRUP 50x60ml.(DICYCLO+SIMETHI;LSP)",
     "genericNameTh": "Dicyclomine",
     "category": "ยาระบบทางเดินอาหาร",
-    "costPrice": 21.5,
+    "costPrice": 23.75,
     "barcode": "",
     "vendorcod": "LSP",
     "stockStatus": "in_stock"
@@ -45250,7 +45360,7 @@
     "category": "ยาคุมกำเนิด ยาฮอร์โมน",
     "costPrice": 321,
     "barcode": "",
-    "vendorcod": "FT2018",
+    "vendorcod": "DKSH",
     "stockStatus": "in_stock"
   },
   {
@@ -45864,7 +45974,7 @@
     "nameEn": "แกนเหล็ก พยุงหลัง back LS lumbosacral size ตั้งเต็มจิตต์ 3XL",
     "genericNameTh": "",
     "category": "สินค้ายังไม่จัดหมวด",
-    "costPrice": 400,
+    "costPrice": 356,
     "barcode": "",
     "vendorcod": "TTJI",
     "stockStatus": "in_stock"
@@ -45930,7 +46040,7 @@
     "nameEn": "สีเนื้อ พยุงหลัง back LS lumbosacral ตั้งเต็มจิตต์ 2XL",
     "genericNameTh": "",
     "category": "สินค้ายังไม่จัดหมวด",
-    "costPrice": 400,
+    "costPrice": 427,
     "barcode": "",
     "vendorcod": "TTJI",
     "stockStatus": "in_stock"
@@ -48394,7 +48504,7 @@
     "nameEn": "สเตรปซิล 8's ซอง วิตซี(ส้ม)",
     "genericNameTh": "ยาอม ; Lozenges",
     "category": "ยาอม ทุกชนิด",
-    "costPrice": 21.5,
+    "costPrice": 25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -48460,7 +48570,7 @@
     "nameEn": "สตองเค เกลือแร่ ซองส้มผลไม้รวม",
     "genericNameTh": "ผงเกลือแร่โออาร์เอส ;Oral rehydration salts",
     "category": "วิตามิน เกลือแร่ ผลิตภัณฑ์เสริมอาหาร",
-    "costPrice": 2.75,
+    "costPrice": 3,
     "barcode": "",
     "vendorcod": "ถาวรา",
     "stockStatus": "in_stock"
@@ -52662,7 +52772,7 @@
     "nameEn": "ยูอีคอฟ อมมะขามป้อม ซีดี 20เม็ด",
     "genericNameTh": "มะขามป้อม ;Phyllanthus emblica",
     "category": "ยาอม ทุกชนิด",
-    "costPrice": 21,
+    "costPrice": 22,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -55709,7 +55819,7 @@
     "nameEn": "วิเวียร์ 800 มก. แผง 5 เม็ด",
     "genericNameTh": "Acyclovir",
     "category": "ยาฆ่าเขื้อแบคทีเรีย เชื้อรา ไวรัส",
-    "costPrice": 31.5,
+    "costPrice": 29.25,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -56501,7 +56611,7 @@
     "nameEn": "ZENTOZIDE 1x4's(PRAZIQUANTEL;BKK)",
     "genericNameTh": "ยาฆ่าพยาธิ ยาถ่ายพยาธิ ;ANTHELMENTIC",
     "category": "ยาถ่ายพยาธิ",
-    "costPrice": 0,
+    "costPrice": 39.25,
     "barcode": "",
     "vendorcod": "BKK",
     "stockStatus": "in_stock"
@@ -58019,7 +58129,7 @@
     "nameEn": "",
     "genericNameTh": "ขวดแก้ว พลาสติก ;ขวดเปล่า,Bottle",
     "category": "วัสดุทางการแพทย์",
-    "costPrice": 140,
+    "costPrice": 150,
     "barcode": "",
     "vendorcod": "FT2018",
     "stockStatus": "in_stock"
@@ -64740,7 +64850,7 @@
     "nameEn": "หนุมาน ยาดมสมุนไพรโบราณ แก้ลม วิงเวียน 5ก.",
     "genericNameTh": "ยาดม;Inhaler",
     "category": "ยาใช้ภายนอก ยาครีม",
-    "costPrice": 20,
+    "costPrice": 18.75,
     "barcode": "",
     "vendorcod": "หนุมาน",
     "stockStatus": "in_stock"
