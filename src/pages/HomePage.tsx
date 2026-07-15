@@ -257,6 +257,7 @@ export default function HomePage() {
       )}
 
       {/* CTA */}
+      <div className="max-w-lg mx-auto mb-6"><LicenseBadge /></div>
       <footer className="bg-white border-t border-gray-100 text-gray-500 py-10">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="col-span-2 md:col-span-1">
