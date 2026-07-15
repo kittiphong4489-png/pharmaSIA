@@ -262,7 +262,7 @@ export default function SellerOrdersPage() {
       {/* Tracking Modal */}
       {showTrackingModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowTrackingModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 sm:max-w max-w-full sm:rounded-2xl rounded-none sm:mx-4 mx-0-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-4">🚚 กำหนดเลขพัสดุ</h3>
             <div className="space-y-3">
               <div>

@@ -605,7 +605,7 @@ export default function CartPage() {
               {/* Confirmation Dialog */}
               {showConfirmDialog && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowConfirmDialog(false)}>
-                  <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+                  <div className="bg-white rounded-2xl p-6 sm:max-w max-w-full sm:rounded-2xl rounded-none sm:mx-4 mx-0-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">ยืนยันสั่งซื้อ</h3>
                     <p className="text-sm text-gray-500 mb-4">ยืนยันดำเนินการสั่งซื้อ {selectedItems.size} รายการ รวมเป็นเงิน <strong className="text-blue-600">฿{grandTotal.toFixed(2)}</strong></p>
                     <div className="flex gap-3">

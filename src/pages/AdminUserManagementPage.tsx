@@ -131,7 +131,7 @@ export default function AdminUserManagementPage() {
       {/* Add Admin Modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowAdd(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 sm:max-w max-w-full sm:rounded-2xl rounded-none sm:mx-4 mx-0-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold mb-4">เพิ่มผู้ดูแลระบบ</h2>
             <div className="space-y-3">
               <input placeholder="ชื่อ-สกุล" value={addForm.fullName} onChange={(e) => setAddForm({...addForm, fullName: e.target.value})}
