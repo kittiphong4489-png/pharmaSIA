@@ -1420,6 +1420,7 @@ app.get("/api/settings", async (c) => {
     const publicSettings = {
       storeName: settings.storeName,
       storeNameTh: settings.storeNameTh,
+      storeType: settings.storeType,
       storeAddress: settings.storeAddress,
       storePhone: settings.storePhone,
       storeEmail: settings.storeEmail,
@@ -1429,6 +1430,13 @@ app.get("/api/settings", async (c) => {
       facebookUrl: settings.facebookUrl,
       footer: settings.footer,
       promptpayPhone: settings.promptpayPhone,
+      licenseNumber: settings.licenseNumber,
+      pharmacistName: settings.pharmacistName,
+      pharmacistLicense: settings.pharmacistLicense,
+      operatingHours: settings.operatingHours,
+      storeImage: settings.storeImage,
+      licenseImage: settings.licenseImage,
+      pharmacistPhoto: settings.pharmacistPhoto,
     };
     return c.json({ settings: publicSettings });
   } catch (e: any) {
