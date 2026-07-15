@@ -72,6 +72,8 @@ initDb().then(() => {
   
   // ── Migration: add slipUrl column to payments ──
   try { db.exec("ALTER TABLE payments ADD COLUMN slipUrl TEXT DEFAULT ''"); } catch {}
+  // ── Migration: add sub_categories table ──
+  try { db.exec("CREATE TABLE IF NOT EXISTS sub_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, nameTh TEXT NOT NULL, nameEn TEXT DEFAULT '', icon TEXT DEFAULT '💊', categoryId INTEGER DEFAULT 1, sortOrder INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, keywordPatterns TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP)"); db.exec("CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(subCategoryId)"); } catch {}
 }).catch(e => {
   console.error("[DB] Init error:", e?.message);
 });
