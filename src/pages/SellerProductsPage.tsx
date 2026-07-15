@@ -41,7 +41,7 @@ export default function SellerProductsPage() {
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadProducts(); }, [catFilter, page]);
+  useEffect(() => { loadProducts(); }, [catFilter, page, search]);
 
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
@@ -138,6 +138,10 @@ export default function SellerProductsPage() {
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && loadProducts()}
           placeholder="ค้นหาสินค้า..." className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+        <button onClick={() => loadProducts()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+          🔍 ค้นหา
+        </button>
         <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
           <option value="">ทั้งหมด</option>
