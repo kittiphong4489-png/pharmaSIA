@@ -538,6 +538,8 @@ app.get("/api/products", async (c) => {
 // ── Admin Products (with costPrice) ──
 app.get("/api/admin/products", async (c) => {
   try {
+    const payload = await requireAdmin(c);
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
     const search = c.req.query("search") || "";
     const categoryId = c.req.query("categoryId");
     const page = Math.max(1, parseInt(c.req.query("page") || "1"));
