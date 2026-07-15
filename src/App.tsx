@@ -103,7 +103,8 @@ export default function App() {
               </Routes>
             </Layout>
           </BrowserRouter>
-          <DebugPanel />
+          {/* DebugPanel — hidden in production */}
+          {/* <DebugPanel /> */}
           </SettingsProvider>
           </ErrorBoundary>
         </AuthProvider>
