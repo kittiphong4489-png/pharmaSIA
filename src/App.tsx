@@ -24,6 +24,7 @@ import SellerSettingsPage from "./pages/SellerSettingsPage";
 import SellerCategoriesPage from "./pages/SellerCategoriesPage";
 import SellerShippingPage from "./pages/SellerShippingPage";
 import SellerPromotionsPage from "./pages/SellerPromotionsPage";
+import SellerSubCategoriesPage from "./pages/SellerSubCategoriesPage";
 import SalesReportsPage from "./pages/SalesReportsPage";
 import SellerPricingPage from "./pages/SellerPricingPage";
 import SellerBatchesPage from "./pages/SellerBatchesPage";
@@ -76,6 +77,7 @@ export default function App() {
                 <Route path="/seller/categories" element={<SellerRoute><SellerCategoriesPage /></SellerRoute>} />
                 <Route path="/seller/shipping" element={<SellerRoute><SellerShippingPage /></SellerRoute>} />
                 <Route path="/seller/promotions" element={<SellerRoute><SellerPromotionsPage /></SellerRoute>} />
+                <Route path="/seller/sub-categories" element={<SellerRoute><SellerSubCategoriesPage /></SellerRoute>} />
                 <Route path="/seller/traceability" element={<SellerRoute><TraceabilityPage /></SellerRoute>} />
                 <Route path="/seller/pos" element={<SellerRoute><PosPage /></SellerRoute>} />
                 <Route path="/seller/customers" element={<SellerRoute><CustomerListPage /></SellerRoute>} />

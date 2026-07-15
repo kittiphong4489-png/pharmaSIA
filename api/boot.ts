@@ -3979,6 +3979,10 @@ if (env.isProduction) {
     db.prepare("CREATE TABLE IF NOT EXISTS sub_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, nameTh TEXT NOT NULL, nameEn TEXT DEFAULT '', icon TEXT DEFAULT '💊', categoryId INTEGER NOT NULL REFERENCES categories(id), sortOrder INTEGER DEFAULT 0, isActive INTEGER DEFAULT 1, keywordPatterns TEXT DEFAULT '', createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP)").run();
     db.prepare("CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(subCategoryId)").run();
     try { db.prepare("ALTER TABLE products ADD COLUMN subCategoryId INTEGER REFERENCES sub_categories(id)").run(); } catch {}
+    const count = (db.prepare("SELECT COUNT(*) as c FROM sub_categories").get() as any)?.c || 0;
+    if (count === 0) {
+      db.prepare("INSERT OR IGNORE INTO sub_categories (id, nameTh, icon, categoryId, sortOrder, keywordPatterns) VALUES (1,'ยาแก้ปวด/ลดไข้','💊',1,1,'paracetamol'),(2,'ยาแก้ไอ/หวัด','🤧',1,2,'แก้ไอ,loratadine'),(3,'แก้ปวดท้อง/ขับลม','🫃',1,3,'antacid,simethicone'),(4,'ทาผื่นคัน/ผิวหนัง','🩹',1,4,'clotrimazole,hydrocortisone'),(5,'ทาแผล/ฆ่าเชื้อ','🩸',1,5,'alcohol,betadine'),(6,'คลายกล้ามเนื้อ','🧊',1,6,'counterpain,menthol'),(7,'ยาหยอดตา/หู','👁️',1,7,'eye drop,ear drop'),(8,'วิตามิน/แร่ธาตุ','💊',1,8,'vitamin,multivitamin'),(9,'อื่นๆ','📦',1,99,'')").run();
+    }
   } catch {}
   // ── Auto-category migration: ป้องกันหมวดหมู่ถูกรีเซ็ต ──
   try {
