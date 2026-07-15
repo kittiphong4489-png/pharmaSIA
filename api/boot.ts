@@ -79,7 +79,7 @@ initDb().then(() => {
     try { db.exec("ALTER TABLE products ADD COLUMN subCategoryId INTEGER"); } catch {}
     const cnt = (db.prepare("SELECT COUNT(*) as c FROM sub_categories").get() as any)?.c || 0;
     if (cnt === 0) {
-      db.prepare("INSERT OR IGNORE INTO sub_categories (id, nameTh, icon, categoryId, sortOrder, keywordPatterns) VALUES (1,'ยาแก้ปวด/ลดไข้','💊',1,1,'paracetamol'),(2,'ยาแก้ไอ/หวัด','🤧',1,2,'แก้ไอ,loratadine'),(3,'แก้ปวดท้อง/ขับลม','🫃',1,3,'antacid,simethicone'),(4,'ทาผื่นคัน','🩹',1,4,'clotrimazole,hydrocortisone'),(5,'ทาแผล/ฆ่าเชื้อ','🩸',1,5,'alcohol,betadine'),(6,'คลายกล้ามเนื้อ','🧊',1,6,'counterpain,menthol'),(7,'ยาหยอดตา/หู','👁️',1,7,'eye drop,ear drop'),(8,'วิตามิน/แร่ธาตุ','💊',1,8,'vitamin,multivitamin'),(9,'อื่นๆ','📦',1,99,'以下略').run();
+      db.prepare("INSERT OR IGNORE INTO sub_categories (id, nameTh, icon, categoryId, sortOrder, keywordPatterns) VALUES (1,'ยาแก้ปวด/ลดไข้','💊',1,1,'paracetamol'),(2,'ยาแก้ไอ/หวัด','🤧',1,2,'แก้ไอ,loratadine'),(3,'แก้ปวดท้อง/ขับลม','🫃',1,3,'antacid,simethicone'),(4,'ทาผื่นคัน','🩹',1,4,'clotrimazole,hydrocortisone'),(5,'ทาแผล/ฆ่าเชื้อ','🩸',1,5,'alcohol,betadine'),(6,'คลายกล้ามเนื้อ','🧊',1,6,'counterpain,menthol'),(7,'ยาหยอดตา/หู','👁️',1,7,'eye drop,ear drop'),(8,'วิตามิน/แร่ธาตุ','💊',1,8,'vitamin,multivitamin'),(9,'อื่นๆ','📦',1,99,'').run();
     }
   } catch(e) { console.warn("sub_categories migration:", e?.message); }
 }).catch(e => {
