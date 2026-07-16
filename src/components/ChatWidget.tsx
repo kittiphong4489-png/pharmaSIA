@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { apiClient } from "../lib/api";
+import { useSettings, getStoreDisplayName } from "../contexts/SettingsContext";
 
 interface ChatMsg { role: "user" | "bot"; content: string; }
 
@@ -85,7 +86,7 @@ export default function ChatWidget() {
           <div className="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">💊</div>
             <div>
-              <p className="text-white font-semibold text-sm">PharmaSIA</p>
+              <p className="text-white font-semibold text-sm">{getStoreDisplayName(settings)}</p>
               <p className="text-green-100 text-xs">สอบถามเภสัชกร</p>
             </div>
           </div>

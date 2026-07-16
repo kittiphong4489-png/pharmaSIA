@@ -72,9 +72,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       "/seller/settings": "ตั้งค่าร้าน",
     };
     const path = location.pathname;
-    if (path.startsWith("/products/")) document.title = "รายละเอียดสินค้า | PharmaSIA Ltd. Part.";
-    else if (path.startsWith("/seller")) document.title = "ร้านค้า | PharmaSIA Ltd. Part.";
-    else document.title = (titles[path] || "") + (titles[path] ? " | PharmaSIA Ltd. Part." : "PharmaSIA Ltd. Part.");
+    const titleSuffix = "บ้านหมอยา PharmaSIA";
+    if (path.startsWith("/products/")) document.title = "รายละเอียดสินค้า | " + titleSuffix;
+    else if (path.startsWith("/seller")) document.title = "ร้านค้า | " + titleSuffix;
+    else document.title = (titles[path] || "") + (titles[path] ? " | " + titleSuffix : titleSuffix);
   }, [location.pathname]);
 
   const isAdmin = user && (user.role === "SELLER" || user.role === "ADMIN");

@@ -323,7 +323,7 @@ export default function CartPage() {
               </div>
             </div>
             <div className="text-sm text-gray-600 space-y-1 mt-4 bg-blue-50 rounded-xl p-4 text-center max-w-xs mx-auto">
-              <p className="font-semibold text-gray-900">PharmaSIA</p>
+              <p className="font-semibold text-gray-900">บ้านหมอยา PharmaSIA</p>
               <p>PromptPay: <span className="font-mono font-bold">075-3600-031</span></p>
               <p className="text-xl font-bold text-blue-600">฿{payment.amount.toFixed(2)}</p>
             </div>

@@ -5,15 +5,24 @@ import { apiClient } from "../lib/api";
 export interface StoreSettings {
   storeName: string;
   storeNameTh: string;
+  storeType: string;
   storeAddress: string;
   storePhone: string;
   storeEmail: string;
   taxId: string;
+  licenseNumber: string;
+  pharmacistName: string;
+  pharmacistLicense: string;
+  operatingHours: string;
   logoUrl: string;
   lineId: string;
   facebookUrl: string;
   footer: string;
   promptpayPhone: string;
+  storeImage: string;
+  licenseImage: string;
+  pharmacistPhoto: string;
+  invoicePrefix: string;
 }
 
 interface SettingsContextType {
@@ -25,7 +34,7 @@ interface SettingsContextType {
 
 // ── Display helpers (Graceful Fallback) ──
 export function getStoreDisplayName(settings: StoreSettings | null): string {
-  return settings?.storeNameTh || settings?.storeName || "PharmaSIA";
+  return settings?.storeNameTh || settings?.storeName || "บ้านหมอยา PharmaSIA";
 }
 
 export function getStoreLogo(settings: StoreSettings | null): string | null {
