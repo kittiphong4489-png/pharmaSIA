@@ -13,7 +13,8 @@ export default function SellerProductsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, costPrice: 0, stock: 0, status: "active", categoryId: 1 });
+  const [editForm, setEditForm] = useState({ nameTh: "", nameEn: "", price: 0, costPrice: 0, stock: 0, status: "active", categoryId: 1, subCategoryId: 0 });
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -41,11 +42,14 @@ export default function SellerProductsPage() {
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadProducts(); }, [catFilter, page, search]);
+  useEffect(() => {
+    loadProducts();
+    apiClient("/api/sub-categories?categoryId=" + (catFilter || "1")).then(d => setSubCategories(d || [])).catch(() => {});
+  }, [catFilter, page, search]);
 
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
-    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn || "", price: p.price, costPrice: p.costPrice || 0, stock: p.stock, status: p.status, categoryId: p.categoryId });
+    setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn || "", price: p.price, costPrice: p.costPrice || 0, stock: p.stock, status: p.status, categoryId: p.categoryId, subCategoryId: p.subCategoryId || 0 });
   };
 
   const handleSave = async () => {
@@ -199,6 +203,13 @@ export default function SellerProductsPage() {
                       <td className="py-3">
                         <input type="number" value={editForm.costPrice} onChange={(e) => setEditForm({...editForm, costPrice: parseFloat(e.target.value) || 0})}
                           className="w-24 px-2 py-1 border rounded text-sm text-orange-600" />
+                      </td>
+                      <td className="py-3">
+                        <select value={editForm.subCategoryId || 0} onChange={(e) => setEditForm({...editForm, subCategoryId: parseInt(e.target.value)})}
+                          className="px-1 py-1 border rounded text-xs w-28">
+                          <option value={0}>— ไม่ระบุ —</option>
+                          {subCategories.map((sc: any) => <option key={sc.id} value={sc.id}>{sc.icon} {sc.nameTh}</option>)}
+                        </select>
                       </td>
                       <td className="py-3 text-gray-500 text-xs">
                         {editForm.costPrice > 0 ? `${Math.round((editForm.price - editForm.costPrice) / editForm.costPrice * 100)}%` : "-"}
