@@ -67,6 +67,15 @@ export default function ProductsPage() {
     setSearchParams(p);
   };
 
+  const updateFilters = (...updates: [string, string][]) => {
+    const p = new URLSearchParams(searchParams);
+    for (const [key, value] of updates) {
+      if (value) p.set(key, value); else p.delete(key);
+    }
+    p.set("page", "1");
+    setSearchParams(p);
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -104,12 +113,12 @@ export default function ProductsPage() {
 
       {/* Category Pills */}
       <div className="flex flex-wrap gap-2 mb-2">
-        <button onClick={() => { updateFilter("categoryId", ""); updateFilter("subCategoryId", ""); }}
+        <button onClick={() => updateFilters(["categoryId", ""], ["subCategoryId", ""])}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${!catFilter ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
           ทั้งหมด {total > 0 && <span className="ml-1 text-xs opacity-70">({total})</span>}
         </button>
         {categories.filter(c => (c as any).productCount > 0).map((c) => (
-          <button key={c.id} onClick={() => { updateFilter("categoryId", String(c.id)); updateFilter("subCategoryId", ""); }}
+          <button key={c.id} onClick={() => updateFilters(["categoryId", String(c.id)], ["subCategoryId", ""])}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${catFilter === String(c.id) ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
             {c.nameTh} <span className="ml-1 text-xs opacity-70">({(c as any).productCount})</span>
           </button>
