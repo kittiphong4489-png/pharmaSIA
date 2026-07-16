@@ -16,6 +16,8 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [zoomed, setZoomed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [categoryName, setCategoryName] = useState("");
+  const [subCategoryName, setSubCategoryName] = useState("");
 
   const addToCart = async () => {
     if (!product) return;
@@ -73,6 +75,21 @@ export default function ProductDetailPage() {
     if (token) apiClient(`/api/products/${id}/viewed`, { method: "POST", headers: { "Authorization": `Bearer ${token}` } }).catch(() => {});
     apiClient(`/api/products/${id}/related?limit=4`).then(d => setRelatedProducts(d.related || [])).catch(() => {});
   }, [id]);
+
+  // Fetch category + subCategory names
+  useEffect(() => {
+    if (!product) return;
+    apiClient("/api/categories").then((cats: any[]) => {
+      const cat = cats.find((c: any) => c.id === product.categoryId);
+      if (cat) setCategoryName(cat.nameTh);
+    }).catch(() => {});
+    if (product.subCategoryId) {
+      apiClient(`/api/sub-categories?categoryId=${product.categoryId}`).then((subs: any[]) => {
+        const sub = subs.find((s: any) => s.id === product.subCategoryId);
+        if (sub) setSubCategoryName(sub.nameTh);
+      }).catch(() => {});
+    }
+  }, [product]);
 
   if (loading) return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -166,10 +183,19 @@ export default function ProductDetailPage() {
             ))}
           </div>
 
-          {/* SKU + Barcode */}
-          <div className="flex items-center justify-between mb-1">
+          {/* SKU + Category Badge */}
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{product.sku || ""}</span>
-            {product.barcode && <span className="text-xs text-gray-400 font-mono">🔲 {product.barcode}</span>}
+            {categoryName && (
+              <Link to={`/products?categoryId=${product.categoryId}`} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100">
+                {categoryName}
+              </Link>
+            )}
+            {subCategoryName && (
+              <Link to={`/products?categoryId=${product.categoryId}&subCategoryId=${product.subCategoryId}`} className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full hover:bg-green-100">
+                {subCategoryName}
+              </Link>
+            )}
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.nameTh}</h1>
