@@ -17,6 +17,7 @@ function setSessionToken(tok: string) {
 }
 
 export default function ChatWidget() {
+  const { settings } = useSettings();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<ChatMsg[]>([{ role: "bot", content: WELCOME }]);
   const [input, setInput] = useState("");
