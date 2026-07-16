@@ -554,9 +554,9 @@ app.get("/api/admin/products", async (c) => {
     const params: any[] = [];
     
     if (categoryId) { sql += " AND p.categoryId = ?"; params.push(parseInt(categoryId)); }
-    if (search) { sql += " AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?)"; params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+    if (search) { sql += " AND (p.nameTh LIKE ? OR p.nameEn LIKE ? OR p.sku LIKE ?)"; params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
     
-    const countSql = "SELECT COUNT(*) as total FROM products p WHERE 1=1" + (categoryId ? " AND categoryId = ?" : "") + (search ? " AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?)" : "");
+    const countSql = "SELECT COUNT(*) as total FROM products p WHERE 1=1" + (categoryId ? " AND categoryId = ?" : "") + (search ? " AND (p.nameTh LIKE ? OR p.nameEn LIKE ? OR p.sku LIKE ?)" : "");
     const countParams = categoryId ? [parseInt(categoryId)] : [];
     if (search) countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
     const { total } = db.prepare(countSql).get(...countParams) as any;

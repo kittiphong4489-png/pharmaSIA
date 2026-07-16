@@ -50,6 +50,8 @@ export default function SellerProductsPage() {
   const handleEdit = (p: Product) => {
     setEditingId(p.id);
     setEditForm({ nameTh: p.nameTh, nameEn: p.nameEn || "", price: p.price, costPrice: p.costPrice || 0, stock: p.stock, status: p.status, categoryId: p.categoryId, subCategoryId: p.subCategoryId || 0 });
+    // Load sub-categories for this product's category
+    apiClient(`/api/sub-categories?categoryId=${p.categoryId}`).then(d => setSubCategories(d || [])).catch(() => {});
   };
 
   const handleSave = async () => {
