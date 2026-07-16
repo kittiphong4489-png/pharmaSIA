@@ -49,14 +49,16 @@ export default function ProductsPage() {
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
+  }, [catFilter, subFilter, search, page, sort, limit]);
 
-    // Fetch sub-categories when category is selected
+  // Fetch sub-categories independently (no race condition)
+  useEffect(() => {
     if (catFilter) {
       apiClient(`/api/sub-categories?categoryId=${catFilter}`).then(d => setSubCategories(d || [])).catch(() => {});
     } else {
       setSubCategories([]);
     }
-  }, [catFilter, subFilter, search, page, sort, limit]);
+  }, [catFilter]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
