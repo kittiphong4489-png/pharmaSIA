@@ -473,7 +473,7 @@ app.get("/api/products", async (c) => {
     // Smart multi-field search
     if (search) {
       const terms = search.trim().split(/\s+/).filter(Boolean);
-      const conditions = terms.map(() => "(nameTh LIKE ? OR nameEn LIKE ? OR genericNameTh LIKE ? OR sku LIKE ? OR descriptionTh LIKE ?)");
+      const conditions = terms.map(() => "(p.nameTh LIKE ? OR p.nameEn LIKE ? OR p.genericNameTh LIKE ? OR p.sku LIKE ? OR p.descriptionTh LIKE ?)");
       sql += " AND " + conditions.join(" AND ");
       for (const term of terms) {
         const q = `%${term}%`;
@@ -510,10 +510,10 @@ app.get("/api/products", async (c) => {
     let countSql = "SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.categoryId = c.id WHERE 1=1";
     const countParams: any[] = [];
     if (search) {
-      const terms = search.trim().split(/\\s+/).filter(Boolean);
-      for (const term of terms) {
+      const terms2 = search.trim().split(/\s+/).filter(Boolean);
+      for (const term of terms2) {
         const q = `%${term}%`;
-        countSql += " AND (nameTh LIKE ? OR nameEn LIKE ? OR genericNameTh LIKE ? OR sku LIKE ? OR descriptionTh LIKE ?)";
+        countSql += " AND (p.nameTh LIKE ? OR p.nameEn LIKE ? OR p.genericNameTh LIKE ? OR p.sku LIKE ? OR p.descriptionTh LIKE ?)";
         countParams.push(q, q, q, q, q);
       }
     }
