@@ -962,6 +962,39 @@ app.post("/api/orders/:id/cancel", async (c) => {
   }
 });
 
+// ── Update order status (admin/seller) ──
+app.put("/api/orders/:id/status", async (c) => {
+  try {
+    const db = getDb();
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const newStatus = body.status;
+    const validStatuses = ["pending", "confirmed", "processing", "packed", "shipped", "delivered", "cancelled"];
+    if (!newStatus || !validStatuses.includes(newStatus)) {
+      return c.json({ success: false, error: `สถานะต้องเป็นหนึ่งใน: ${validStatuses.join(", ")}` }, 400);
+    }
+
+    // Auth check
+    const auth = c.req.header("authorization") || "";
+    const { verifyToken } = await import("./lib/auth");
+    const payload = await verifyToken(auth.replace("Bearer ", ""));
+    if (!payload) return c.json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+    const user = db.prepare("SELECT role FROM users WHERE id = ?").get(payload.userId) as any;
+    if (!user || (user.role !== "SELLER" && user.role !== "ADMIN")) {
+      return c.json({ error: "ไม่มีสิทธิ์ในการเปลี่ยนสถานะออเดอร์" }, 403);
+    }
+
+    const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as any;
+    if (!order) return c.json({ error: "ไม่พบออเดอร์" }, 404);
+
+    db.prepare("UPDATE orders SET status = ?, updatedAt = datetime('now') WHERE id = ?").run(newStatus, id);
+    return c.json({ success: true, status: newStatus, message: `อัพเดทสถานะเป็น ${newStatus} เรียบร้อย` });
+  } catch (e: any) {
+    const db = getDb(); await logApiError(c, db, "update_order_status", "data", null, e);
+    return c.json({ error: e?.message }, 500);
+  }
+});
+
 app.get("/api/orders/:id", async (c) => {
   try {
     const auth = c.req.header("authorization") || "";
