@@ -13,6 +13,8 @@ export interface Product {
   unit: string;
   image: string | null;
   categoryId: number;
+  subCategoryId: number | null;
+  costPrice: number;
   isFeatured: number;
   isNew: number;
   requiresPrescription: number;
