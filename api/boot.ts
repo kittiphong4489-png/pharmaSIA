@@ -1260,78 +1260,64 @@ app.post("/api/seller/bot", async (c) => {
     const db = getDb();
     const q = query.toLowerCase();
 
-    // ── Intent Matching ──
-    
-    // 1. Order tracking
-    if (/ord-\w+/.test(q) || /ออเดอร์/.test(q)) {
-      const match = q.match(/ord-\w+/i);
-      if (match) {
-        const order = db.prepare("SELECT o.*, p.status as payStatus, p.slipUrl FROM orders o LEFT JOIN payments p ON p.orderId = o.id WHERE o.orderNumber = ?").get(match[0].toUpperCase()) as any;
-        if (order) {
-          const items = db.prepare("SELECT oi.*, pr.nameTh FROM order_items oi JOIN products pr ON oi.productId = pr.id WHERE oi.orderId = ?").all(order.id);
-          const sMap: Record<string,string> = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
-          return c.json({
-            reply: `📦 ออเดอร์ ${order.orderNumber}\nสถานะ: ${sMap[order.status]||order.status}\nยอด: ฿${order.grandTotal?.toFixed(2)}\n${items.map(i=>`· ${i.nameTh} x${i.quantity}`).join('\n')}`,
-            type: "order"
-          });
-        }
-        return c.json({ reply: `❌ ไม่พบออเดอร์ ${match[0].toUpperCase()}`, type: "error" });
+    // 1. Order tracking by number
+    const ordMatch = q.match(/ord-\w+/i);
+    if (ordMatch) {
+      const order = db.prepare("SELECT o.* FROM orders o WHERE o.orderNumber = ?").get(ordMatch[0].toUpperCase()) as any;
+      if (order) {
+        const items = db.prepare("SELECT oi.*, pr.nameTh FROM order_items oi JOIN products pr ON oi.productId = pr.id WHERE oi.orderId = ?").all(order.id);
+        const sMap: Record<string,string> = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
+        return c.json({ reply: `📦 ${order.orderNumber}\nสถานะ: ${sMap[order.status]||order.status}\nยอด: ฿${order.grandTotal?.toFixed(2)}\n${items.map((i:any)=>'· '+i.nameTh+' x'+i.quantity).join('\n')}`, type: "order" });
       }
+      return c.json({ reply: `❌ ไม่พบออเดอร์ ${ordMatch[0].toUpperCase()}`, type: "error" });
     }
 
     // 2. Pending orders
-    if (/ออเดอร์ค้าง|pending|รอดำเนินการ|ยังไม่ได/.test(q)) {
+    if (/ออเดอร์|ค้าง|pending|รอดำเนินการ|ยังไม่ได/.test(q)) {
       const orders = db.prepare("SELECT * FROM orders WHERE status IN ('pending','paid','confirmed','packing') ORDER BY id DESC LIMIT 5").all() as any[];
       if (orders.length === 0) return c.json({ reply: "✅ ไม่มีออเดอร์ค้าง", type: "success" });
       const sMap: Record<string,string> = {pending:"🟡 รอจ่าย",paid:"🟢 จ่ายแล้ว",confirmed:"🔵 รออนุมัติ",packing:"📦 กำลังแพ็ค"};
-      return c.json({
-        reply: `📋 ออเดอร์รอดำเนินการ ${orders.length} รายการ:\n${orders.map(o=>`· #${o.id} ${o.orderNumber} ${sMap[o.status]||o.status}`).join('\n')}`,
-        type: "orders"
-      });
+      return c.json({ reply: `📋 ${orders.length} รายการ:\n${orders.map((o:any)=>'· #'+o.id+' '+o.orderNumber+' '+sMap[o.status]).join('\n')}`, type: "orders" });
     }
 
     // 3. Today's sales
-    if (/ยอดขาย|วันนี้|revenue|ยอด/.test(q)) {
+    if (/ยอดขาย|วันนี้|revenue/.test(q)) {
       const today = db.prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(grandTotal),0) as total FROM orders WHERE date(updatedAt) = date('now') AND status NOT IN ('cancelled')").get() as any;
-      return c.json({
-        reply: `💰 ยอดขายวันนี้\n📦 ${today.cnt} ออเดอร์\n💵 ฿${today.total?.toFixed(2) || '0.00'}`,
-        type: "sales"
-      });
+      return c.json({ reply: `💰 ยอดขายวันนี้\n📦 ${today.cnt} ออเดอร์\n💵 ฿${(today.total||0).toFixed(2)}`, type: "sales" });
     }
 
-    // 4. Low stock alert
-    if (/สต็อก|ใกล้หมด|stock|low/.test(q)) {
+    // 4. Low stock
+    if (/สต็อก|ใกล้หมด|stock\s|low\sstock/i.test(q)) {
       const products = db.prepare("SELECT id, nameTh, stock FROM products WHERE status='active' AND stock > 0 AND stock <= 5 ORDER BY stock ASC LIMIT 10").all() as any[];
       if (products.length === 0) return c.json({ reply: "✅ ไม่มีสินค้าใกล้หมด", type: "success" });
-      return c.json({
-        reply: `⚠️ สินค้าใกล้หมด ${products.length} รายการ:\n${products.map(p=>`· ${p.nameTh} (เหลือ ${p.stock})`).join('\n')}`,
-        type: "stock"
-      });
+      return c.json({ reply: `⚠️ ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' (เหลือ '+p.stock+')').join('\n')}`, type: "stock" });
     }
 
-    // 5. Product search
-    if (/สินค้า|ค้นหา|find|product/.test(q)) {
-      const kw = q.replace(/สินค้า|ค้นหา|find|product/gi, '').trim();
-      if (!kw) return c.json({ reply: "🔍 ระบุชื่อสินค้าที่ต้องการค้นหาด้วยครับ เช่น 'สินค้า para'", type: "help" });
-      const products = db.prepare("SELECT id, nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all(`%${kw}%`, `%${kw}%`, `%${kw}%`) as any[];
-      if (products.length === 0) return c.json({ reply: `❌ ไม่พบสินค้า "${kw}"`, type: "error" });
-      return c.json({
-        reply: `🔍 พบ ${products.length} รายการ:\n${products.map(p=>`· ${p.nameTh} ฿${p.price?.toFixed(0)} (สต็อก:${p.stock})`).join('\n')}`,
-        type: "products"
-      });
+    // 5. Product search (explicit or fallback)
+    const searchKw = q.replace(/^(สินค้า|ค้นหา|find|search)\s*/i, '').trim();
+    if (searchKw || /สินค้า|ค้นหา|find|search/i.test(q)) {
+      const kw = searchKw || q;
+      if (!kw || kw.length < 1) return c.json({ reply: "🔍 ระบุชื่อสินค้าที่ต้องการค้นหา เช่น 'สินค้า para'", type: "help" });
+      const products = db.prepare("SELECT id, nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all('%'+kw+'%', '%'+kw+'%', '%'+kw+'%') as any[];
+      if (products.length === 0) return c.json({ reply: `❌ ไม่พบ "${kw}"`, type: "error" });
+      return c.json({ reply: `🔍 ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' ฿'+(p.price||0)+' (สต็อก:'+p.stock+')').join('\n')}`, type: "products" });
     }
 
-    // 6. Help
-    return c.json({
-      reply: "🤖 สวัสดีครับ! ผมช่วยอะไรได้บ้าง\n\n· ออเดอร์ค้าง\n· ORD-xxx (เช็คออเดอร์)\n· ยอดขายวันนี้\n· สต็อกใกล้หมด\n· สินค้า xxx (ค้นหา)",
-      type: "help"
-    });
+    // 6. Fallback: search for the query directly
+    if (q.length >= 2) {
+      const products = db.prepare("SELECT id, nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all('%'+q+'%', '%'+q+'%', '%'+q+'%') as any[];
+      if (products.length > 0) {
+        return c.json({ reply: `🔍 "${query}" ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' ฿'+(p.price||0)+' (สต็อก:'+p.stock+')').join('\n')}`, type: "products" });
+      }
+    }
+
+    // Help
+    return c.json({ reply: "🤖 พิมพ์คำถามได้เลย\n\n· ออเดอร์ค้าง\n· ORD-xxx\n· ยอดขายวันนี้\n· สต็อกใกล้หมด\n· สินค้า para", type: "help" });
 
   } catch (e: any) {
-    return c.json({ reply: `❌ เกิดข้อผิดพลาด: ${e?.message || 'ไม่ทราบสาเหตุ'}`, type: "error" }, 500);
+    return c.json({ reply: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่", type: "error" }, 500);
   }
 });
-
 
 // Auth helper for regular users (not admin)
 async function requireUser(c: any): Promise<any> {
