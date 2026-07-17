@@ -45,9 +45,6 @@ export default function ProductsPage() {
   // Filter params
   const priceMin = searchParams.get("priceMin") || "";
   const priceMax = searchParams.get("priceMax") || "";
-  const packageFilter = searchParams.get("package") || "";
-  const eligibility = searchParams.get("eligibility") || "";
-  const stockStatus = searchParams.get("stockStatus") || "";
 
   useEffect(() => {
     setLoading(true);
@@ -58,7 +55,6 @@ export default function ProductsPage() {
     if (sort && sort !== "default") params.set("sort", sort);
     if (priceMin) params.set("minPrice", priceMin);
     if (priceMax) params.set("maxPrice", priceMax);
-    if (packageFilter) params.set("package", packageFilter);
     Promise.all([
       apiClient(`/api/${viewMode === "table" ? "admin/" : ""}products?${params}`, { headers: { "Authorization": `Bearer ${localStorage.getItem("pharma_token")}` } }),
       apiClient("/api/categories"),
@@ -68,7 +64,7 @@ export default function ProductsPage() {
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [catFilter, subFilter, search, page, sort, limit, priceMin, priceMax, packageFilter, viewMode]);
+  }, [catFilter, subFilter, search, page, sort, limit, priceMin, priceMax, viewMode]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
@@ -117,11 +113,11 @@ export default function ProductsPage() {
 
         {/* Filter Bar */}
         <FilterBar
-          filters={{ priceMin, priceMax, package: packageFilter, eligibility, stockStatus }}
+          filters={{ priceMin, priceMax }}
           onFilterChange={updateFilter}
           onClearAll={() => {
             const p = new URLSearchParams(searchParams);
-            ["priceMin","priceMax","package","eligibility","stockStatus"].forEach(k => p.delete(k));
+            ["priceMin","priceMax"].forEach(k => p.delete(k));
             p.set("page", "1");
             setSearchParams(p);
           }}
