@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Tier {
   qty: number;
@@ -20,9 +20,21 @@ interface Props {
 
 export default function PriceTier({ price, tiers = DEFAULT_TIERS, compact }: Props) {
   const [show, setShow] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!show) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setShow(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [show]);
+
+  if (!price || price <= 0) return null;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShow(!show); }}
         className="text-[10px] text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1"
