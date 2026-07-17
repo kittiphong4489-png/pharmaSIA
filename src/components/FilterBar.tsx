@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface FilterBarProps {
   filters: { [key: string]: string };
@@ -11,6 +11,10 @@ export default function FilterBar({ filters, onFilterChange, onClearAll }: Filte
   const [localMin, setLocalMin] = useState(filters.priceMin || "");
   const [localMax, setLocalMax] = useState(filters.priceMax || "");
   const activeCount = Object.values(filters).filter(Boolean).length;
+
+  // Sync local state when filters cleared externally
+  useEffect(() => { setLocalMin(filters.priceMin || ""); }, [filters.priceMin]);
+  useEffect(() => { setLocalMax(filters.priceMax || ""); }, [filters.priceMax]);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
