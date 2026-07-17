@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { apiClient } from "../lib/api";
 
@@ -29,25 +29,35 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
       apiClient(`/api/products?${params}`),
       apiClient(`/api/products?sort=newest&limit=6` + (currentCategoryId ? `&categoryId=${currentCategoryId}` : "")),
     ]).then(([popularData, newestData]) => {
-      setPopular((popularData?.items || []).filter((p: any) => !excludeIds.includes(p.id)).slice(0, 6));
-      setNewest((newestData?.items || []).filter((p: any) => !excludeIds.includes(p.id)).slice(0, 6));
+      setPopular(popularData?.items || []);
+      setNewest(newestData?.items || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [currentCategoryId]);
 
+  // Deduplicate against main grid (reactive)
+  const displayPopular = useMemo(
+    () => popular.filter((p: any) => !excludeIds.includes(p.id)).slice(0, 6),
+    [popular, excludeIds]
+  );
+  const displayNewest = useMemo(
+    () => newest.filter((p: any) => !excludeIds.includes(p.id)).slice(0, 6),
+    [newest, excludeIds]
+  );
+
   if (loading) return null;
-  if (!popular.length && !newest.length) return null;
+  if (!displayPopular.length && !displayNewest.length) return null;
 
   return (
     <div className="space-y-6 mb-8">
       {/* 🔥 Popular */}
-      {popular.length > 0 && (
+      {displayPopular.length > 0 && (
         <div>
           <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
             <span>🔥</span> สินค้าขายดี
           </h3>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
-            {popular.map((p) => (
+            {displayPopular.map((p) => (
               <Link
                 key={p.id}
                 to={`/products/${p.id}`}
@@ -70,13 +80,13 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
       )}
 
       {/* 🆕 New */}
-      {newest.length > 0 && (
+      {displayNewest.length > 0 && (
         <div>
           <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
             <span>🆕</span> มาใหม่
           </h3>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
-            {newest.map((p) => (
+            {displayNewest.map((p) => (
               <Link
                 key={p.id}
                 to={`/products/${p.id}`}
