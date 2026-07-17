@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
 import ProductSidebar from "../components/ProductSidebar";
 import SearchBar from "../components/SearchBar";
@@ -21,6 +22,8 @@ const SORT_OPTIONS = [
 const PAGE_SIZES = [20, 50, 100];
 
 export default function ProductsPage() {
+  const { user } = useAuth();
+  const isSeller = user?.role === "seller" || user?.role === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,7 +58,7 @@ export default function ProductsPage() {
     if (priceMax) params.set("maxPrice", priceMax);
     if (packageFilter) params.set("package", packageFilter);
     Promise.all([
-      apiClient(`/api/products?${params}`, { headers: { "Authorization": `Bearer ${localStorage.getItem("pharma_token")}` } }),
+      apiClient(`/api/${viewMode === "table" ? "admin/" : ""}products?${params}`, { headers: { "Authorization": `Bearer ${localStorage.getItem("pharma_token")}` } }),
       apiClient("/api/categories"),
     ]).then(([data, cats]) => {
       setProducts(data.items || []);
@@ -63,7 +66,7 @@ export default function ProductsPage() {
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [catFilter, subFilter, search, page, sort, limit, priceMin, priceMax, packageFilter]);
+  }, [catFilter, subFilter, search, page, sort, limit, priceMin, priceMax, packageFilter, viewMode]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
@@ -140,7 +143,8 @@ export default function ProductsPage() {
         </select>
       </div>
 
-      {/* View Toggle */}
+      {/* View Toggle — only for sellers */}
+      {isSeller && (
       <div className="flex items-center gap-3 mb-4">
         <span className="text-xs text-gray-400">มุมมอง:</span>
         <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
@@ -158,6 +162,7 @@ export default function ProductsPage() {
           >🏪 ร้านค้า</button>
         </div>
       </div>
+      )}
 
       {/* Product Grid / Table */}
       {viewMode === "table" ? (
