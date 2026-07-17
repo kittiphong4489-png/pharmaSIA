@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { apiClient } from "../lib/api";
 import Pagination from "../components/Pagination";
 
@@ -38,7 +37,6 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function SellerOrdersPage() {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -195,41 +193,15 @@ export default function SellerOrdersPage() {
                   <button onClick={() => handleConfirmPayment(o.id)} disabled={updating === o.id}
                     className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">✅ ยืนยันออเดอร์</button>
                 )}
-                {/* confirmed → packing (start packing) */}
+                {/* confirmed → packing (direct status update) */}
                 {o.status === "confirmed" && (
-                  <button onClick={async () => {
-                    setUpdating(o.id);
-                    try {
-                      const data = await apiClient(`/api/packing/start/${o.id}`, { method: "POST" });
-                      if (data.slip) {
-                        navigate(`/seller/packing/${data.slip.id}`);
-                      } else {
-                        loadOrders();
-                      }
-                    } catch {
-                      loadOrders();
-                    }
-                    setUpdating(null);
-                  }} disabled={updating === o.id}
+                  <button onClick={() => updateStatus(o.id, "packing")} disabled={updating === o.id}
                     className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">📦 เริ่มแพ็ค</button>
                 )}
-                {/* packing → go to PackingDetailPage */}
+                {/* packing → packed */}
                 {o.status === "packing" && (
-                  <button onClick={async () => {
-                    setUpdating(o.id);
-                    try {
-                      const data = await apiClient(`/api/packing/slip-by-order/${o.id}`);
-                      if (data.slip) {
-                        navigate(`/seller/packing/${data.slip.id}`);
-                      } else {
-                        loadOrders();
-                      }
-                    } catch {
-                      loadOrders();
-                    }
-                    setUpdating(null);
-                  }} disabled={updating === o.id}
-                    className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">📦 ดูใบแพ็ค</button>
+                  <button onClick={() => updateStatus(o.id, "packed")} disabled={updating === o.id}
+                    className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">✅ แพ็คเสร็จ</button>
                 )}
                 {/* packed → shipping (tracking modal) */}
                 {o.status === "packed" && (
