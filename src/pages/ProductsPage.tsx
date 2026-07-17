@@ -4,6 +4,7 @@ import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
 import ProductSidebar from "../components/ProductSidebar";
 import SearchBar from "../components/SearchBar";
 import ProductTable from "../components/ProductTable";
+import FilterBar from "../components/FilterBar";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
 import Pagination from "../components/Pagination";
@@ -39,6 +40,14 @@ export default function ProductsPage() {
   const sort = searchParams.get("sort") || "default";
   const limit = parseInt(searchParams.get("limit") || "20");
 
+  // Filter params
+  const priceMin = searchParams.get("priceMin") || "";
+  const priceMax = searchParams.get("priceMax") || "";
+  const manufacturer = searchParams.get("manufacturer") || "";
+  const packageFilter = searchParams.get("package") || "";
+  const eligibility = searchParams.get("eligibility") || "";
+  const stockStatus = searchParams.get("stockStatus") || "";
+
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams({ limit: String(limit), page: String(page) });
@@ -46,6 +55,10 @@ export default function ProductsPage() {
     if (subFilter) params.set("subCategoryId", subFilter);
     if (search) params.set("search", search);
     if (sort && sort !== "default") params.set("sort", sort);
+    if (priceMin) params.set("minPrice", priceMin);
+    if (priceMax) params.set("maxPrice", priceMax);
+    if (manufacturer) params.set("manufacturer", manufacturer);
+    if (packageFilter) params.set("package", packageFilter);
     Promise.all([
       apiClient(`/api/products?${params}`, { headers: { "Authorization": `Bearer ${localStorage.getItem("pharma_token")}` } }),
       apiClient("/api/categories"),
@@ -110,6 +123,15 @@ export default function ProductsPage() {
         <div className="mb-6">
           <SearchBar onSearch={(q) => updateFilter("search", q)} initialValue={search} />
         </div>
+
+        {/* Filter Bar */}
+        <FilterBar
+          filters={{ priceMin, priceMax, manufacturer, package: packageFilter, eligibility, stockStatus }}
+          onFilterChange={updateFilter}
+          onClearAll={() => {
+            ["priceMin","priceMax","manufacturer","package","eligibility","stockStatus"].forEach(k => updateFilter(k, ""));
+          }}
+        />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-8">

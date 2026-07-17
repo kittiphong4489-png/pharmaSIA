@@ -464,6 +464,8 @@ app.get("/api/products", async (c) => {
     const limit = parseInt(c.req.query("limit") || "12");
     const minPrice = c.req.query("minPrice");
     const maxPrice = c.req.query("maxPrice");
+    const manufacturer = c.req.query("manufacturer");
+    const packageFilter = c.req.query("package");
     const sort = c.req.query("sort") || "default";
     const db = getDb();
 
@@ -496,6 +498,15 @@ app.get("/api/products", async (c) => {
     if (maxPrice) {
       sql += " AND price <= ?";
       params.push(parseFloat(maxPrice));
+    if (manufacturer) {
+      sql += " AND p.company LIKE ?";
+      params.push(`%${manufacturer}%`);
+    }
+    if (packageFilter) {
+      sql += " AND (p.nameTh LIKE ? OR p.descriptionTh LIKE ?)";
+      const pkg = `%${packageFilter}%`;
+      params.push(pkg, pkg);
+    }
     }
 
     // Sort
@@ -561,6 +572,15 @@ app.get("/api/products/suggest", async (c) => {
     return c.json({ suggestions: [], error: e?.message }, 500);
   }
 });
+// ── Manufacturers List ──
+app.get("/api/products/manufacturers", async (c) => {
+  try {
+    const db = getDb();
+    const rows = db.prepare("SELECT DISTINCT company FROM products WHERE company IS NOT NULL AND company != '' AND status='active' ORDER BY company ASC").all() as any[];
+    return c.json({ manufacturers: rows.map((r: any) => r.company) });
+  } catch (e: any) { return c.json({ manufacturers: [], error: e?.message }, 500); }
+});
+
 
 // ── Admin Products (with costPrice) ──
 app.get("/api/admin/products", async (c) => {
