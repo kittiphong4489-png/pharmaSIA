@@ -4,6 +4,7 @@ import SubCategoryList from "./SubCategoryList";
 import { apiClient } from "../lib/api";
 
 interface Props {
+  categories: Category[];
   selectedCategoryId: number | null;
   selectedSubCategoryId: number | null;
   onCategorySelect: (categoryId: number | null) => void;
@@ -11,21 +12,20 @@ interface Props {
 }
 
 export default function ProductSidebar({
+  categories,
   selectedCategoryId,
   selectedSubCategoryId,
   onCategorySelect,
   onSubCategorySelect,
 }: Props) {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load categories on mount
+  // Close on Escape key
   useEffect(() => {
-    apiClient("/api/categories")
-      .then((data) => setCategories(data || []))
-      .catch(() => {});
-  }, []);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    if (isOpen) { document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }
+  }, [isOpen]);
 
   // Load sub-categories when category changes
   useEffect(() => {

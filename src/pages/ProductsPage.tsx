@@ -83,6 +83,7 @@ export default function ProductsPage() {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <ProductSidebar
+        categories={categories}
         selectedCategoryId={catFilter ? parseInt(catFilter) : null}
         selectedSubCategoryId={subFilter ? parseInt(subFilter) : null}
         onCategorySelect={(id) => updateFilters(
