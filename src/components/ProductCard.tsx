@@ -4,13 +4,11 @@ import type { Product } from "../types";
 import { getSessionId } from "../lib/session";
 import { apiClient } from "../lib/api";
 
-const LINE_OA_ID = localStorage.getItem("line_oa_id") || "@YOUR_LINE_OA_ID";
+const getLineOA = () => localStorage.getItem("pharma_settings_line") || localStorage.getItem("line_oa_id") || "@YOUR_LINE_OA_ID";
 
 // Extract initials from product name for placeholder
 function getInitials(name?: string, nameEn?: string): string {
-  const src = nameEn || name || "??";
-  const words = src.trim().split(/\s+/);
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  const src = ((nameEn || name || "??").match(/[A-Za-z0-9ก-๙]/g) || []).join("") || "??";
   return src.slice(0, 2).toUpperCase();
 }
 
@@ -131,7 +129,7 @@ export function ProductCard({ product }: { product: Product }) {
             onClick={(e) => {
               e.preventDefault();
               const msg = encodeURIComponent("สวัสดีครับ/ค่ะ ต้องการปรึกษาเภสัชกรเกี่ยวกับตัวยา: " + product.nameTh);
-              window.open(`https://line.me/R/oaMessage/${LINE_OA_ID}/?text=${msg}`, "_blank");
+              window.open(`https://line.me/R/oaMessage/${getLineOA()}/?text=${msg}`, "_blank");
             }}
             className="w-full h-10 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-1"
           >
