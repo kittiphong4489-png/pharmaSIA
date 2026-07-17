@@ -75,7 +75,7 @@ export default function AuthRoute({ children }: { children: React.ReactNode }) {
             <form onSubmit={async (e) => {
               e.preventDefault(); setError(""); setSuccess("");
               if (password.length < 6) { setError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"); return; }
-              const r = await register(email, password, fullName, phone);
+              const r = await register(email, password, fullName, phone, "INDIVIDUAL");
               if (r.success) {
                 setSuccess("✅ สมัครสมาชิกสำเร็จ! กำลังเข้าสู่ระบบ...");
               } else {
