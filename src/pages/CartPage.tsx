@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { apiClient, uploadImage, uploadSlipImage } from "../lib/api";
 import { getSessionId } from "../lib/session";
 
@@ -20,6 +21,7 @@ interface PaymentInfo {
 }
 
 export default function CartPage() {
+  const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);

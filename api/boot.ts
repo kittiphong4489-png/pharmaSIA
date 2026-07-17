@@ -849,19 +849,19 @@ app.post("/api/orders", async (c) => {
     if (tax < 0) tax = 0;
     const grandTotal = Math.max(0, subtotal + shippingFee - discount + tax);
 
-    // Create order
-    // Extract userId from auth header if available
-    let userId = null;
+    // Require authentication for ordering
     const authHeader = c.req.header("authorization") || "";
     const authToken = authHeader.replace("Bearer ", "");
-    if (authToken) {
-      try {
-        const { verifyToken } = await import("./lib/auth");
-        const authPayload = await verifyToken(authToken);
-        if (authPayload) userId = authPayload.userId;
-      } catch (e: any) {
-        console.error("[Auth] Token verification error:", e?.message);
-      }
+    if (!authToken) return c.json({ success: false, error: "กรุณาเข้าสู่ระบบก่อนสั่งซื้อ" }, 401);
+    
+    let userId: number | null = null;
+    try {
+      const { verifyToken } = await import("./lib/auth");
+      const authPayload = await verifyToken(authToken);
+      if (!authPayload?.userId) return c.json({ success: false, error: "กรุณาเข้าสู่ระบบก่อนสั่งซื้อ" }, 401);
+      userId = authPayload.userId;
+    } catch {
+      return c.json({ success: false, error: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" }, 401);
     }
     const orderResult = db.prepare(`INSERT INTO orders (orderNumber, userId, sessionId, customerName, customerPhone, shippingAddressJson, subtotal, shippingFee, tax, grandTotal, status, notes, orderedAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))`).run(
