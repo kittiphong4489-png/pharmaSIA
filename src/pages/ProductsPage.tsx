@@ -31,6 +31,8 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "table">(
     (localStorage.getItem("pharma_viewMode") as "grid" | "table") || "grid"
   );
+  // Force grid for non-sellers
+  useEffect(() => { if (!isSeller && viewMode === "table") setViewMode("grid"); }, [isSeller, viewMode]);
   const [loading, setLoading] = useState(true);
 
   const catFilter = searchParams.get("categoryId") || "";
