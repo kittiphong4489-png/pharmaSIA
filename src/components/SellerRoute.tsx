@@ -1,5 +1,6 @@
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import SellerBot from "./SellerBot";
 
 export default function SellerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -22,5 +23,5 @@ export default function SellerRoute({ children }: { children: React.ReactNode })
       </div>
     );
   }
-  return <>{children}</>;
+  return <><SellerBot />{children}</>;
 }
