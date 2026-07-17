@@ -8,11 +8,12 @@ interface FilterBarProps {
 
 export default function FilterBar({ filters, onFilterChange, onClearAll }: FilterBarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [localMin, setLocalMin] = useState(filters.priceMin || "");
+  const [localMax, setLocalMax] = useState(filters.priceMax || "");
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
-      {/* Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -39,10 +40,8 @@ export default function FilterBar({ filters, onFilterChange, onClearAll }: Filte
         </div>
       </button>
 
-      {/* Body */}
       {isOpen && (
         <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-4">
-          {/* Price Range */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
               💰 ตามงบประมาณ (฿)
@@ -51,16 +50,20 @@ export default function FilterBar({ filters, onFilterChange, onClearAll }: Filte
               <input
                 type="number"
                 placeholder="ขั้นต่ำ"
-                value={filters.priceMin || ""}
-                onChange={(e) => onFilterChange("priceMin", e.target.value)}
+                value={localMin}
+                onChange={(e) => setLocalMin(e.target.value)}
+                onBlur={() => onFilterChange("priceMin", localMin)}
+                onKeyDown={(e) => { if (e.key === "Enter") { onFilterChange("priceMin", localMin); (e.target as HTMLInputElement).blur(); } }}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
               />
               <span className="text-gray-400">—</span>
               <input
                 type="number"
                 placeholder="สูงสุด"
-                value={filters.priceMax || ""}
-                onChange={(e) => onFilterChange("priceMax", e.target.value)}
+                value={localMax}
+                onChange={(e) => setLocalMax(e.target.value)}
+                onBlur={() => onFilterChange("priceMax", localMax)}
+                onKeyDown={(e) => { if (e.key === "Enter") { onFilterChange("priceMax", localMax); (e.target as HTMLInputElement).blur(); } }}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
               />
             </div>
