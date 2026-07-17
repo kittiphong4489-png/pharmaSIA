@@ -45,7 +45,6 @@ export default function ProductSidebar({
         selectedCategoryId={selectedCategoryId}
         onSelect={(id) => {
           onCategorySelect(id);
-          onSubCategorySelect(null);
           setIsOpen(false); // close on mobile
         }}
       />
