@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { apiClient, uploadImage, uploadSlipImage } from "../lib/api";
 import { getSessionId } from "../lib/session";
 
@@ -20,6 +21,7 @@ interface PaymentInfo {
 }
 
 export default function CartPage() {
+  const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -458,21 +460,13 @@ export default function CartPage() {
               <button onClick={() => {
                 if (selectedList.length === 0) { alert("กรุณาเลือกสินค้าอย่างน้อย 1 รายการ"); return; }
                 setShowCheckout(true);
-                // Fetch saved addresses
+                // Pre-fill from logged-in user profile
+                if (user?.fullName) {
+                  setForm(prev => ({ ...prev, customerName: user.fullName || "" }));
+                }
+                // Load saved addresses
                 const token = localStorage.getItem("pharma_token");
                 if (token) {
-                  // Load user profile for name auto-fill
-                  apiClient("/api/trpc/auth.me", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "0": { token } }),
-                  }).then((profileData: any) => {
-                    const user = profileData?.[0]?.result?.data?.user;
-                    if (user?.fullName) {
-                      setForm(prev => ({ ...prev, customerName: user.fullName }));
-                    }
-                  }).catch(() => {});
-                  // Load saved addresses
                   apiClient("/api/account/addresses")
                     .then(d => {
                       if (d.addresses?.length) {
