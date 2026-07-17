@@ -502,8 +502,9 @@ app.get("/api/products", async (c) => {
       params.push(parseInt(categoryId));
     }
     if (subCategoryId) {
-      sql += " AND subCategoryId = ?";
-      params.push(parseInt(subCategoryId));
+      const subId = parseInt(subCategoryId);
+      if (subId === 0) { sql += " AND subCategoryId IS NULL"; }
+      else { sql += " AND subCategoryId = ?"; params.push(subId); }
     }
     if (minPrice) {
       sql += " AND price >= ?";
@@ -534,7 +535,11 @@ app.get("/api/products", async (c) => {
       }
     }
     if (categoryId) { countSql += " AND categoryId = ?"; countParams.push(parseInt(categoryId)); }
-    if (subCategoryId) { countSql += " AND subCategoryId = ?"; countParams.push(parseInt(subCategoryId)); }
+    if (subCategoryId) { 
+      const sId = parseInt(subCategoryId);
+      if (sId === 0) { countSql += " AND subCategoryId IS NULL"; }
+      else { countSql += " AND subCategoryId = ?"; countParams.push(sId); }
+    }
     if (minPrice) { countSql += " AND price >= ?"; countParams.push(parseFloat(minPrice)); }
     if (maxPrice) { countSql += " AND price <= ?"; countParams.push(parseFloat(maxPrice)); }
     const { total } = db.prepare(countSql).get(...countParams) as any;
@@ -2920,7 +2925,9 @@ app.post("/api/payments/:id/confirm", async (c) => {
     if (!payment) return c.json({ error: "Payment not found" }, 404);
     if (payment.status !== "pending") return c.json({ error: "Payment already confirmed or cancelled" }, 400);
 
-    db.prepare("UPDATE payments SET status = 'confirmed', paidAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?").run(id);
+    const body = await c.req.json().catch(() => ({}));
+    const slipUrl = body.slipUrl || payment.slipUrl || "";
+    db.prepare("UPDATE payments SET status = 'confirmed', slipUrl = ?, paidAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?").run(slipUrl, id);
 
     // Create notification for user
     const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(payment.orderId) as any;
