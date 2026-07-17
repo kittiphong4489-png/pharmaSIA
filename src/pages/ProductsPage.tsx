@@ -161,7 +161,12 @@ export default function ProductsPage() {
 
       {/* Product Grid / Table */}
       {viewMode === "table" ? (
-        <ProductTable products={products} loading={loading} />
+        <>
+          <ProductTable products={products} loading={loading} />
+          <div className="mt-4">
+            <Pagination page={page} totalPages={totalPages} onChange={(p) => updateFilter("page", String(p))} />
+          </div>
+        </>
       ) : loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           <LoadingSkeleton count={8} />

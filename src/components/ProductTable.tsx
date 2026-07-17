@@ -39,7 +39,8 @@ export default function ProductTable({ products, loading }: Props) {
     }
   };
 
-  const stockBadge = (stock: number) => {
+  const stockBadge = (stock: number | null | undefined) => {
+    if (stock === null || stock === undefined) return <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">ไม่ระบุ</span>;
     if (stock <= 0) return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">❌ หมด</span>;
     if (stock <= 5) return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">⚠️ {stock}</span>;
     return <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full font-medium">🟢 {stock}</span>;
@@ -148,8 +149,9 @@ export default function ProductTable({ products, loading }: Props) {
                   max={p.stock || 999}
                 />
                 <button
-                  onClick={(e) => { e.stopPropagation(); setQty(p.id, (quantities[p.id] || 0) + 1); }}
+                  onClick={(e) => { e.stopPropagation(); setQty(p.id, Math.min((quantities[p.id] || 0) + 1, p.stock || 999)); }}
                   className="w-7 h-7 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold text-gray-600 transition-colors"
+                  disabled={(quantities[p.id] || 0) >= (p.stock || 0)}
                 >+</button>
                 <button
                   onClick={(e) => addToCart(p, e)}
