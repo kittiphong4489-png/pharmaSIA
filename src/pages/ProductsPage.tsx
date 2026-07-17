@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
 import ProductSidebar from "../components/ProductSidebar";
 import SearchBar from "../components/SearchBar";
+import ProductTable from "../components/ProductTable";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
 import Pagination from "../components/Pagination";
@@ -26,6 +27,9 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState<"grid" | "table">(
+    (localStorage.getItem("pharma_viewMode") as "grid" | "table") || "grid"
+  );
   const [loading, setLoading] = useState(true);
 
   const catFilter = searchParams.get("categoryId") || "";
@@ -162,8 +166,29 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Product Grid */}
-      {loading ? (
+      {/* View Toggle */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-xs text-gray-400">มุมมอง:</span>
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+          <button
+            onClick={() => { setViewMode("grid"); localStorage.setItem("pharma_viewMode", "grid"); }}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              viewMode === "grid" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >👤 บุคคล</button>
+          <button
+            onClick={() => { setViewMode("table"); localStorage.setItem("pharma_viewMode", "table"); }}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              viewMode === "table" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >🏪 ร้านค้า</button>
+        </div>
+      </div>
+
+      {/* Product Grid / Table */}
+      {viewMode === "table" ? (
+        <ProductTable products={products} loading={loading} />
+      ) : loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           <LoadingSkeleton count={8} />
         </div>
