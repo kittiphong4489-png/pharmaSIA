@@ -46,7 +46,7 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
           <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
             <span>🔥</span> สินค้าขายดี
           </h3>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
             {popular.map((p) => (
               <Link
                 key={p.id}
@@ -75,7 +75,7 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
           <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
             <span>🆕</span> มาใหม่
           </h3>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
             {newest.map((p) => (
               <Link
                 key={p.id}

@@ -165,7 +165,10 @@ export default function ProductsPage() {
 
       {/* Recommendation Strip — page 1 only */}
       {page === 1 && !search && viewMode === "grid" && (
-        <RecommendationStrip currentCategoryId={catFilter || undefined} />
+        <RecommendationStrip 
+          currentCategoryId={catFilter || undefined}
+          excludeIds={products.map(p => p.id)}
+        />
       )}
 
       {/* Product Grid / Table */}
