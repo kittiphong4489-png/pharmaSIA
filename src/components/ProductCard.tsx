@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "../types";
 import { getSessionId } from "../lib/session";
 import { apiClient } from "../lib/api";
+import PriceTier from "./PriceTier";
 
 const getLineOA = () => localStorage.getItem("pharma_settings_line") || localStorage.getItem("line_oa_id") || "@YOUR_LINE_OA_ID";
 
@@ -117,6 +118,9 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="text-xs text-gray-400 line-through">฿{product.originalPrice.toFixed(2)}</span>
           )}
         </div>
+
+        {/* Bulk Pricing */}
+        {stockLevel !== "out" && <PriceTier price={product.price} compact />}
 
         {/* SKU (optional, subtle) */}
         {"sku" in product && product.sku && (
