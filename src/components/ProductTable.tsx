@@ -54,7 +54,9 @@ export default function ProductTable({ products, loading }: Props) {
 
   const profitValue = (price: number, cost: number) => {
     if (!cost || cost <= 0) return "—";
-    return `฿${(price - cost).toFixed(2)}`;
+    const diff = price - cost;
+    const sign = diff >= 0 ? "" : "-";
+    return `${sign}฿${Math.abs(diff).toFixed(2)}`;
   };
 
   if (loading) {
@@ -121,12 +123,12 @@ export default function ProductTable({ products, loading }: Props) {
 
               {/* Profit Value */}
               <div className="text-right">
-                <div className="text-sm font-medium text-emerald-600">{profitValue(p.price, p.costPrice)}</div>
+                <div className={`text-sm font-medium ${(p.price - p.costPrice) >= 0 ? "text-emerald-600" : "text-red-500"}`}>{profitValue(p.price, p.costPrice)}</div>
               </div>
 
               {/* Profit % */}
               <div className="text-right">
-                <div className="text-sm font-medium text-emerald-600">{profitRate(p.price, p.costPrice)}</div>
+                <div className={`text-sm font-medium ${(p.price - p.costPrice) >= 0 ? "text-emerald-600" : "text-red-500"}`}>{profitRate(p.price, p.costPrice)}</div>
               </div>
 
               {/* Stock */}
