@@ -6,6 +6,7 @@ import ProductSidebar from "../components/ProductSidebar";
 import SearchBar from "../components/SearchBar";
 import ProductTable from "../components/ProductTable";
 import FilterBar from "../components/FilterBar";
+import RecommendationStrip from "../components/RecommendationStrip";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
 import Pagination from "../components/Pagination";
@@ -160,6 +161,11 @@ export default function ProductsPage() {
           >🏪 ร้านค้า</button>
         </div>
       </div>
+      )}
+
+      {/* Recommendation Strip — page 1 only */}
+      {page === 1 && !search && viewMode === "grid" && (
+        <RecommendationStrip currentCategoryId={catFilter || undefined} />
       )}
 
       {/* Product Grid / Table */}
