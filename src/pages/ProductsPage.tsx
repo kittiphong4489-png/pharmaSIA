@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
+import ProductSidebar from "../components/ProductSidebar";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
 import Pagination from "../components/Pagination";
@@ -79,12 +80,25 @@ export default function ProductsPage() {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">สินค้าทั้งหมด</h1>
-        <p className="text-sm text-gray-500 mt-1">พบ {total} รายการ</p>
-      </div>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <ProductSidebar
+        selectedCategoryId={catFilter ? parseInt(catFilter) : null}
+        selectedSubCategoryId={subFilter ? parseInt(subFilter) : null}
+        onCategorySelect={(id) => updateFilters(
+          ["categoryId", id ? String(id) : ""],
+          ["subCategoryId", ""]
+        )}
+        onSubCategorySelect={(id) => updateFilter("subCategoryId", id ? String(id) : "")}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">สินค้าทั้งหมด</h1>
+          <p className="text-sm text-gray-500 mt-1">พบ {total} รายการ</p>
+        </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
@@ -162,6 +176,7 @@ export default function ProductsPage() {
           <Pagination page={page} totalPages={totalPages} onChange={(p) => updateFilter("page", String(p))} />
         </>
       )}
+    </div>
     </div>
   );
 }
