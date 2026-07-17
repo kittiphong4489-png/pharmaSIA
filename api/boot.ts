@@ -497,7 +497,6 @@ app.get("/api/products", async (c) => {
       sql += " AND price <= ?";
       params.push(parseFloat(maxPrice));
     }
-    }
 
     // Sort
     const sortMap: Record<string, string> = {
