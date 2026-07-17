@@ -37,7 +37,7 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
 
   // Deduplicate against main grid (reactive)
   const displayPopular = useMemo(
-    () => popular.filter((p: any) => !excludeIds.includes(p.id)).slice(0, 6),
+    () => popular.filter((p: any) => !excludeIds.includes(p.id) && (p.soldCount || 0) > 0).slice(0, 6),
     [popular, excludeIds]
   );
   const displayNewest = useMemo(
@@ -70,7 +70,7 @@ export default function RecommendationStrip({ currentCategoryId, excludeIds = []
                   <div className="text-xs font-medium text-gray-800 truncate">{p.nameTh}</div>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs font-bold text-orange-600">฿{p.price?.toFixed(0)}</span>
-                    <span className="text-[10px] text-gray-400">ขาย {p.soldCount}</span>
+                    {p.soldCount > 0 && <span className="text-[10px] text-gray-400">ขาย {p.soldCount}</span>}
                   </div>
                 </div>
               </Link>
