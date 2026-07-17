@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function SearchBar({ onSearch, initialValue = "" }: Props) {
-  const [query, setQuery] = useState(initialValue);
+  const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
@@ -72,7 +72,7 @@ export default function SearchBar({ onSearch, initialValue = "" }: Props) {
         handleSubmit();
       }
     }
-    else if (e.key === "Escape") { setIsOpen(false); inputRef.current?.blur(); }
+    else if (e.key === "Escape") { inputRef.current?.blur(); }
   };
 
   return (
@@ -107,7 +107,8 @@ export default function SearchBar({ onSearch, initialValue = "" }: Props) {
           {suggestions.map((s, i) => (
             <button
               key={s.id}
-              onMouseDown={(e) => { e.preventDefault(); navigate(`/products/${s.id}`); }}
+              onClick={() => { setIsOpen(false); navigate(`/products/${s.id}`); }}
+              onMouseDown={(e) => e.preventDefault()}
               className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0 ${
                 i === selectedIdx ? "bg-blue-50" : "hover:bg-gray-50"
               }`}
