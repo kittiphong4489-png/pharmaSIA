@@ -22,8 +22,12 @@ export default function SearchBar({ onSearch, initialValue = "" }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+
+  // Sync query with URL param changes (e.g., sidebar clear)
+  useEffect(() => { setQuery(initialValue); }, [initialValue]);
 
   // Debounced suggest fetch
   const fetchSuggestions = useCallback((q: string) => {
@@ -44,7 +48,10 @@ export default function SearchBar({ onSearch, initialValue = "" }: Props) {
 
   useEffect(() => {
     fetchSuggestions(query);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (blurRef.current) clearTimeout(blurRef.current);
+    };
   }, [query, fetchSuggestions]);
 
   const handleSubmit = (q?: string) => {
@@ -77,7 +84,10 @@ export default function SearchBar({ onSearch, initialValue = "" }: Props) {
           value={query}
           onChange={(e) => { setQuery(e.target.value); setSelectedIdx(-1); }}
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
-          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onBlur={() => {
+            if (blurRef.current) clearTimeout(blurRef.current);
+            blurRef.current = setTimeout(() => setIsOpen(false), 200);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="🔍 ค้นหายา / สินค้า / SKU..."
           className="flex-1 px-5 py-3.5 text-base bg-white outline-none text-gray-800 placeholder-gray-400"
