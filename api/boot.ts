@@ -519,6 +519,7 @@ app.get("/api/products", async (c) => {
       }
     }
     if (categoryId) { countSql += " AND categoryId = ?"; countParams.push(parseInt(categoryId)); }
+    if (subCategoryId) { countSql += " AND subCategoryId = ?"; countParams.push(parseInt(subCategoryId)); }
     if (minPrice) { countSql += " AND price >= ?"; countParams.push(parseFloat(minPrice)); }
     if (maxPrice) { countSql += " AND price <= ?"; countParams.push(parseFloat(maxPrice)); }
     const { total } = db.prepare(countSql).get(...countParams) as any;
