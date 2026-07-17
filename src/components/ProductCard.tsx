@@ -4,7 +4,7 @@ import type { Product } from "../types";
 import { getSessionId } from "../lib/session";
 import { apiClient } from "../lib/api";
 
-const LINE_OA_ID = "@YOUR_LINE_OA_ID";
+const LINE_OA_ID = localStorage.getItem("line_oa_id") || "@YOUR_LINE_OA_ID";
 
 // Extract initials from product name for placeholder
 function getInitials(name?: string, nameEn?: string): string {
@@ -26,7 +26,7 @@ function getGradient(id: number): string {
     "from-lime-400 to-green-500",
     "from-fuchsia-400 to-pink-500",
   ];
-  return gradients[id % gradients.length];
+  return gradients[(id ?? 1) % gradients.length];
 }
 
 export function ProductCard({ product }: { product: Product }) {
@@ -46,15 +46,19 @@ export function ProductCard({ product }: { product: Product }) {
   const addToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const d = await apiClient("/api/cart/add", {
-      method: "POST",
-      body: JSON.stringify({ productId: product.id, quantity: qty, sessionId: getSessionId() }),
-    });
-    if (d.success) {
-      window.dispatchEvent(new CustomEvent("cart-updated"));
-      setQty(1);
-    } else {
-      alert("ไม่สามารถเพิ่มสินค้าได้");
+    try {
+      const d = await apiClient("/api/cart/add", {
+        method: "POST",
+        body: JSON.stringify({ productId: product.id, quantity: qty, sessionId: getSessionId() }),
+      });
+      if (d.success) {
+        window.dispatchEvent(new CustomEvent("cart-updated"));
+        setQty(1);
+      } else {
+        alert("ไม่สามารถเพิ่มสินค้าได้");
+      }
+    } catch {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
   };
 
@@ -84,7 +88,7 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
 
           {/* Discount Badge */}
-          {product.originalPrice && stockLevel !== "out" && (
+          {product.originalPrice && product.originalPrice > 0 && stockLevel !== "out" && (
             <span className="absolute top-3 right-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-md shadow-sm">
               -{Math.round((1 - product.price / product.originalPrice) * 100)}%
             </span>
