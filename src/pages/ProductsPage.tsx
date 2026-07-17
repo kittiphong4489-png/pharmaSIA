@@ -63,7 +63,7 @@ export default function ProductsPage() {
       setCategories(cats || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [catFilter, subFilter, search, page, sort, limit]);
+  }, [catFilter, subFilter, search, page, sort, limit, priceMin, priceMax, packageFilter]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
@@ -115,7 +115,10 @@ export default function ProductsPage() {
           filters={{ priceMin, priceMax, package: packageFilter, eligibility, stockStatus }}
           onFilterChange={updateFilter}
           onClearAll={() => {
-            ["priceMin","priceMax","package","eligibility","stockStatus"].forEach(k => updateFilter(k, ""));
+            const p = new URLSearchParams(searchParams);
+            ["priceMin","priceMax","package","eligibility","stockStatus"].forEach(k => p.delete(k));
+            p.set("page", "1");
+            setSearchParams(p);
           }}
         />
 
