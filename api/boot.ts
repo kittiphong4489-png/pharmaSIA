@@ -538,6 +538,30 @@ app.get("/api/products", async (c) => {
   }
 });
 
+// ── Quick Suggest (autocomplete) ──
+app.get("/api/products/suggest", async (c) => {
+  try {
+    const q = (c.req.query("q") || "").trim();
+    if (!q || q.length < 1) return c.json({ suggestions: [] });
+    const db = getDb();
+    const like = `%${q}%`;
+    const rows = db.prepare(
+      "SELECT id, nameTh, sku, price, stock, categoryId FROM products WHERE status='active' AND (nameTh LIKE ? OR sku LIKE ?) LIMIT 8"
+    ).all(like, like) as any[];
+    const suggestions = rows.map((r: any) => ({
+      id: r.id,
+      name: r.nameTh,
+      sku: r.sku,
+      price: r.price,
+      stock: r.stock,
+      categoryId: r.categoryId,
+    }));
+    return c.json({ suggestions });
+  } catch (e: any) {
+    return c.json({ suggestions: [], error: e?.message }, 500);
+  }
+});
+
 // ── Admin Products (with costPrice) ──
 app.get("/api/admin/products", async (c) => {
   try {

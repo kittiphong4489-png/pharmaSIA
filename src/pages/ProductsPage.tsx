@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard, LoadingSkeleton } from "../components/ProductCard";
 import ProductSidebar from "../components/ProductSidebar";
+import SearchBar from "../components/SearchBar";
 import { apiClient } from "../lib/api";
 import type { Product, Category } from "../types";
 import Pagination from "../components/Pagination";
@@ -99,6 +100,11 @@ export default function ProductsPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">สินค้าทั้งหมด</h1>
           <p className="text-sm text-gray-500 mt-1">พบ {total} รายการ</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <SearchBar onSearch={(q) => updateFilter("search", q)} initialValue={search} />
         </div>
 
       {/* Filters */}
