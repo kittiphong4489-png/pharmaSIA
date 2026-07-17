@@ -6,23 +6,52 @@ import { apiClient } from "../lib/api";
 
 const LINE_OA_ID = "@YOUR_LINE_OA_ID";
 
+// Extract initials from product name for placeholder
+function getInitials(name?: string, nameEn?: string): string {
+  const src = nameEn || name || "??";
+  const words = src.trim().split(/\s+/);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return src.slice(0, 2).toUpperCase();
+}
+
+// Random stable gradient from product id
+function getGradient(id: number): string {
+  const gradients = [
+    "from-blue-400 to-indigo-500",
+    "from-emerald-400 to-teal-500",
+    "from-violet-400 to-purple-500",
+    "from-amber-400 to-orange-500",
+    "from-rose-400 to-pink-500",
+    "from-cyan-400 to-sky-500",
+    "from-lime-400 to-green-500",
+    "from-fuchsia-400 to-pink-500",
+  ];
+  return gradients[id % gradients.length];
+}
+
 export function ProductCard({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
+  const [imgError, setImgError] = useState(false);
 
-  const handleConsultPharmacist = (productName: string) => {
-    const message = encodeURIComponent("สวัสดีครับ/ค่ะ ต้องการปรึกษาเภสัชกรเกี่ยวกับตัวยา: " + productName);
-    const lineUrl = "https://line.me/R/oaMessage/" + LINE_OA_ID + "/?text=" + message;
-    window.open(lineUrl, "_blank");
-  };
+  const stockLevel = (product.stock ?? 0) <= 0 ? "out"
+    : (product.stock ?? 0) <= 5 ? "low"
+    : "ok";
 
-  const addToCart = async () => {
+  const stockBadge = {
+    out: { text: "❌ หมด", color: "bg-gray-800/80" },
+    low: { text: `⚠️ เหลือ ${product.stock}`, color: "bg-amber-500/90" },
+    ok: { text: `🟢 มีของ`, color: "bg-emerald-500/90" },
+  }[stockLevel];
+
+  const addToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const d = await apiClient("/api/cart/add", {
       method: "POST",
       body: JSON.stringify({ productId: product.id, quantity: qty, sessionId: getSessionId() }),
     });
     if (d.success) {
-      const ev = new CustomEvent("cart-updated");
-      window.dispatchEvent(ev);
+      window.dispatchEvent(new CustomEvent("cart-updated"));
       setQty(1);
     } else {
       alert("ไม่สามารถเพิ่มสินค้าได้");
@@ -30,90 +59,125 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg hover:border-blue-100 transition-all duration-200">
-      <Link to={`/products/${product.id}`}>
-        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
-          {product.image ? (
-            <img 
-              src={product.image} 
+    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+      {/* Image Section */}
+      <Link to={`/products/${product.id}`} className="block">
+        <div className={`aspect-square bg-gradient-to-br flex items-center justify-center relative overflow-hidden ${product.image && !imgError ? '' : 'from-gray-50 to-gray-100'}`}>
+          {product.image && !imgError ? (
+            <img
+              src={product.image}
               alt={product.nameTh}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-              onError={(e) => { 
-                (e.target as HTMLImageElement).src = '/api/images/no-image.svg';
-              }}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              onError={() => setImgError(true)}
             />
           ) : (
-            <img src="/api/images/no-image.svg" alt="no image" className="w-24 h-24 opacity-40" />
+            <div className={`w-full h-full bg-gradient-to-br ${getGradient(product.id)} flex items-center justify-center`}>
+              <span className="text-4xl font-bold text-white/80 drop-shadow-sm">
+                {getInitials(product.nameTh, product.nameEn)}
+              </span>
+            </div>
           )}
-          {(product.stock ?? 0) <= 0 && (
-            <span className="absolute top-3 left-3 px-3 py-1 bg-gray-800/80 text-white text-xs font-bold rounded-md backdrop-blur-sm">
-              หมด
-            </span>
-          )}
-          {product.originalPrice && (product.stock ?? 0) > 0 && (
-            <span className="absolute top-3 right-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-md">
+
+          {/* Stock Badge */}
+          <span className={`absolute top-3 left-3 px-2.5 py-1 ${stockBadge.color} text-white text-[11px] font-semibold rounded-lg backdrop-blur-sm shadow-sm`}>
+            {stockBadge.text}
+          </span>
+
+          {/* Discount Badge */}
+          {product.originalPrice && stockLevel !== "out" && (
+            <span className="absolute top-3 right-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-md shadow-sm">
               -{Math.round((1 - product.price / product.originalPrice) * 100)}%
             </span>
           )}
         </div>
       </Link>
-      <div className="p-4">
+
+      {/* Info Section */}
+      <div className="p-4 flex flex-col gap-2">
+        {/* Category Badge if subCategory */}
+        {"subCategoryId" in product && (product as any).subCategoryId && (
+          <span className="text-[10px] text-blue-500 font-medium uppercase tracking-wide">
+            💊 หมวดย่อย #{(product as any).subCategoryId}
+          </span>
+        )}
+
+        {/* Product Name */}
         <Link to={`/products/${product.id}`}>
-          <h3 className="font-medium text-gray-900 text-sm leading-snug line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors min-h-[2.5rem]">
             {product.nameTh}
           </h3>
         </Link>
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <span className="text-base font-bold text-blue-600">฿{product.price}</span>
-            {product.originalPrice && (
-              <span className="text-xs text-gray-400 line-through ml-1">฿{product.originalPrice}</span>
-            )}
-          </div>
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-lg font-bold text-orange-600">฿{product.price?.toFixed(2)}</span>
+          {product.originalPrice && (
+            <span className="text-xs text-gray-400 line-through">฿{product.originalPrice.toFixed(2)}</span>
+          )}
         </div>
+
+        {/* SKU (optional, subtle) */}
+        {"sku" in product && product.sku && (
+          <span className="text-[10px] text-gray-300 truncate">{product.sku}</span>
+        )}
+
+        {/* Action Section */}
         {product.requiresPrescription ? (
-          <button onClick={(e) => { e.preventDefault(); handleConsultPharmacist(product.nameTh); }}
-            className="w-full h-8 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors mb-2 flex items-center justify-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              const msg = encodeURIComponent("สวัสดีครับ/ค่ะ ต้องการปรึกษาเภสัชกรเกี่ยวกับตัวยา: " + product.nameTh);
+              window.open(`https://line.me/R/oaMessage/${LINE_OA_ID}/?text=${msg}`, "_blank");
+            }}
+            className="w-full h-10 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
             ปรึกษาเภสัชกร
           </button>
-        ) : null}
-        {/* Quantity Selector + Add to Cart */}
-        {(product.stock ?? 0) <= 0 ? (
-          <div className="h-8 flex items-center justify-center text-sm text-gray-400 font-medium bg-gray-50 rounded-lg">
-            สินค้าหมด
+        ) : stockLevel === "out" ? (
+          <div className="h-10 flex items-center justify-center text-sm text-gray-400 font-semibold bg-gray-100 rounded-xl mt-1">
+            สินค้าหมดชั่วคราว
           </div>
         ) : (
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-            <button onClick={(e) => { e.preventDefault(); setQty(Math.max(1, qty - 1)); }}
-              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium">
-              −
-            </button>
-            <span className="w-8 h-8 flex items-center justify-center text-sm font-medium text-gray-900 border-x border-gray-200">
-              {qty}
-            </span>
-            <button onClick={(e) => { e.preventDefault(); setQty(Math.min(qty + 1, product.stock ?? 0)); }}
-              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium">
-              +
+          <div className="flex items-center gap-2 mt-1">
+            {/* Qty Selector */}
+            <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQty(Math.max(1, qty - 1)); }}
+                className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors text-base font-bold"
+              >
+                −
+              </button>
+              <span className="w-9 h-9 flex items-center justify-center text-sm font-bold text-gray-900 bg-white border-x-2 border-gray-200">
+                {qty}
+              </span>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQty(Math.min(qty + 1, product.stock ?? 99)); }}
+                className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors text-base font-bold"
+              >
+                +
+              </button>
+            </div>
+            {/* Add to Cart */}
+            <button
+              onClick={addToCart}
+              className="flex-1 h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-blue-200 hover:shadow-md active:scale-[0.98]"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+              </svg>
+              หยิบใส่ตะกร้า
             </button>
           </div>
-          <button onClick={addToCart}
-            className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-            </svg>
-            หยิบใส่ตะกร้า
-          </button>
-        </div>
         )}
       </div>
     </div>
   );
 }
 
+// Keep existing exports unchanged
 export function CategoryCard({ name, count, icon, color }: { name: string; count?: number; icon?: string; color?: string }) {
   return (
     <div className="bg-white rounded-2xl p-6 hover:shadow-md transition-all border border-gray-100 cursor-pointer">
