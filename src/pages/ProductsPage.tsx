@@ -20,13 +20,10 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZES = [20, 50, 100];
 
-interface SubCategory { id: number; nameTh: string; icon: string; }
-
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<"grid" | "table">(
     (localStorage.getItem("pharma_viewMode") as "grid" | "table") || "grid"
@@ -67,15 +64,6 @@ export default function ProductsPage() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [catFilter, subFilter, search, page, sort, limit]);
-
-  // Fetch sub-categories independently (no race condition)
-  useEffect(() => {
-    if (catFilter) {
-      apiClient(`/api/sub-categories?categoryId=${catFilter}`).then(d => setSubCategories(d || [])).catch(() => {});
-    } else {
-      setSubCategories([]);
-    }
-  }, [catFilter]);
 
   const updateFilter = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams);
@@ -148,36 +136,6 @@ export default function ProductsPage() {
           ))}
         </select>
       </div>
-
-      {/* Category Pills */}
-      <div className="flex flex-wrap gap-2 mb-2">
-        <button onClick={() => updateFilters(["categoryId", ""], ["subCategoryId", ""])}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${!catFilter ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
-          ทั้งหมด {total > 0 && <span className="ml-1 text-xs opacity-70">({total})</span>}
-        </button>
-        {categories.filter(c => (c as any).productCount > 0).map((c) => (
-          <button key={c.id} onClick={() => updateFilters(["categoryId", String(c.id)], ["subCategoryId", ""])}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${catFilter === String(c.id) ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
-            {c.nameTh} <span className="ml-1 text-xs opacity-70">({(c as any).productCount})</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Sub-category Pills */}
-      {subCategories.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4 ml-2 pl-4 border-l-2 border-blue-200">
-          <button onClick={() => updateFilter("subCategoryId", "")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!subFilter ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-            🔍 ทั้งหมด
-          </button>
-          {subCategories.map((sc) => (
-            <button key={sc.id} onClick={() => updateFilter("subCategoryId", String(sc.id))}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${subFilter === String(sc.id) ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-              {sc.icon} {sc.nameTh}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* View Toggle */}
       <div className="flex items-center gap-3 mb-4">
