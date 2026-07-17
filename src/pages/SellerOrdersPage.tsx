@@ -73,26 +73,25 @@ export default function SellerOrdersPage() {
         body: JSON.stringify({ status }),
       });
       if (!data.success) console.error("Update status failed:", data);
+      else loadOrders();
     } catch (e) {
       console.error("Update status error:", e);
     }
     setUpdating(null);
-    loadOrders();
   };
 
   const handleConfirmPayment = async (orderId: number) => {
     setUpdating(orderId);
     try {
-      // Single endpoint: backend handles status + payment + transaction in one transaction
       const data = await apiClient(`/api/seller/orders/${orderId}/status`, {
         method: "PUT",
         body: JSON.stringify({ status: "confirmed", confirmPayment: true }),
       });
       if (!data.success) throw new Error(data.error || "Failed");
-      loadOrders();
     } catch (e) {
       alert("เกิดข้อผิดพลาด");
     }
+    setUpdating(null);
     loadOrders();
   };
 
