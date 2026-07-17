@@ -43,7 +43,6 @@ export default function ProductsPage() {
   // Filter params
   const priceMin = searchParams.get("priceMin") || "";
   const priceMax = searchParams.get("priceMax") || "";
-  const manufacturer = searchParams.get("manufacturer") || "";
   const packageFilter = searchParams.get("package") || "";
   const eligibility = searchParams.get("eligibility") || "";
   const stockStatus = searchParams.get("stockStatus") || "";
@@ -57,7 +56,6 @@ export default function ProductsPage() {
     if (sort && sort !== "default") params.set("sort", sort);
     if (priceMin) params.set("minPrice", priceMin);
     if (priceMax) params.set("maxPrice", priceMax);
-    if (manufacturer) params.set("manufacturer", manufacturer);
     if (packageFilter) params.set("package", packageFilter);
     Promise.all([
       apiClient(`/api/products?${params}`, { headers: { "Authorization": `Bearer ${localStorage.getItem("pharma_token")}` } }),
@@ -126,7 +124,7 @@ export default function ProductsPage() {
 
         {/* Filter Bar */}
         <FilterBar
-          filters={{ priceMin, priceMax, manufacturer, package: packageFilter, eligibility, stockStatus }}
+          filters={{ priceMin, priceMax, package: packageFilter, eligibility, stockStatus }}
           onFilterChange={updateFilter}
           onClearAll={() => {
             ["priceMin","priceMax","manufacturer","package","eligibility","stockStatus"].forEach(k => updateFilter(k, ""));

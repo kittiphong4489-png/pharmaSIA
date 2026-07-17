@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { apiClient } from "../lib/api";
+import { useState } from "react";
 
 interface FilterBarProps {
   filters: { [key: string]: string };
@@ -8,15 +7,8 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ filters, onFilterChange, onClearAll }: FilterBarProps) {
-  const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const activeCount = Object.values(filters).filter(Boolean).length;
-
-  useEffect(() => {
-    apiClient("/api/products/manufacturers")
-      .then((d) => setManufacturers(d?.manufacturers || []))
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
@@ -97,25 +89,8 @@ export default function FilterBar({ filters, onFilterChange, onClearAll }: Filte
             </div>
           </div>
 
-          {/* Row 2: Manufacturer + Eligibility */}
+          {/* Row 2: Eligibility + Stock */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Manufacturer */}
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
-                🏭 บริษัทผู้ผลิต
-              </label>
-              <select
-                value={filters.manufacturer || ""}
-                onChange={(e) => onFilterChange("manufacturer", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 bg-white"
-              >
-                <option value="">ทั้งหมด</option>
-                {manufacturers.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
             {/* Eligibility */}
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
@@ -137,27 +112,27 @@ export default function FilterBar({ filters, onFilterChange, onClearAll }: Filte
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Row 3: Stock Status */}
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
-              📦 สถานะสต็อก
-            </label>
-            <div className="flex gap-2">
-              {["all", "inStock", "lowStock"].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => onFilterChange("stockStatus", filters.stockStatus === opt ? "" : opt)}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
-                    filters.stockStatus === opt
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
-                  }`}
-                >
-                  {opt === "all" ? "ทั้งหมด" : opt === "inStock" ? "🟢 มีของ" : "⚠️ เหลือน้อย"}
-                </button>
-              ))}
+            {/* Stock Status */}
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                📦 สถานะสต็อก
+              </label>
+              <div className="flex gap-2">
+                {["all", "inStock", "lowStock"].map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => onFilterChange("stockStatus", filters.stockStatus === opt ? "" : opt)}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                      filters.stockStatus === opt
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
+                    }`}
+                  >
+                    {opt === "all" ? "ทั้งหมด" : opt === "inStock" ? "🟢 มีของ" : "⚠️ เหลือน้อย"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
