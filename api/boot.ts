@@ -165,6 +165,22 @@ app.post("/api/sub-categories/assign", async (c) => {
   } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
 });
 
+// ── Reset subcategory assignments ──
+app.post("/api/sub-categories/reset", async (c) => {
+  try {
+    const auth = await requireAdmin(c);
+    if (!auth) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json();
+    const catId = parseInt(body.categoryId || "1");
+    const subId = parseInt(body.subCategoryId);
+    if (!subId) return c.json({ success: false, error: "subCategoryId required" }, 400);
+    const db = getDb();
+    const result = db.prepare("UPDATE products SET subCategoryId = NULL WHERE categoryId = ? AND subCategoryId = ?")
+      .run(catId, subId);
+    return c.json({ success: true, resetCount: result.changes });
+  } catch (e: any) { return c.json({ success: false, error: e?.message }, 400); }
+});
+
 
 
 
