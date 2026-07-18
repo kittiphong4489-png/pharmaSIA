@@ -40,6 +40,9 @@ export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [updating, setUpdating] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,12 +61,15 @@ export default function SellerOrdersPage() {
     setLoading(true);
     const params = new URLSearchParams({ limit: "50", page: String(page) });
     if (statusFilter) params.set("status", statusFilter);
+    if (searchTerm) params.set("search", searchTerm);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
     apiClient(`/api/seller/orders?${params}`)
       .then(d => { setOrders(d.orders || []); setTotalPages(d.totalPages || 1); setLoading(false); })
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadOrders(); }, [statusFilter, page]);
+  useEffect(() => { loadOrders(); }, [statusFilter, page, searchTerm, dateFrom, dateTo]);
 
   const updateStatus = async (id: number, status: string) => {
     setUpdating(id);
@@ -115,25 +121,34 @@ export default function SellerOrdersPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">รายการออเดอร์</h1>
         <div className="flex items-center gap-2">
-          <a
-            href="/api/export/orders.csv"
-            onClick={(e) => {
-              e.preventDefault();
-              const t = localStorage.getItem("pharma_token");
-              fetch("/api/export/orders.csv", { headers: t ? { Authorization: `Bearer ${t}` } : {} })
-                .then(r => r.blob())
-                .then(blob => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "orders.csv"; a.click(); URL.revokeObjectURL(a.href); })
-                .catch(() => {});
-            }}
-            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700"
-          >
-            📥 Export CSV
-          </a>
+          <a href="/api/export/orders.csv" onClick={(e) => {e.preventDefault(); const t = localStorage.getItem("pharma_token"); fetch("/api/export/orders.csv", { headers: t ? { Authorization: `Bearer ${t}` } : {} }).then(r => r.blob()).then(blob => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "orders.csv"; a.click(); URL.revokeObjectURL(a.href); }).catch(() => {});}} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700">📥 Export CSV</a>
           <span className="text-sm text-gray-400">{orders.length} ออเดอร์</span>
         </div>
       </div>
 
-      {/* Filter */}
+      {/* Search + Date Filter */}
+      <div className="flex gap-2 mb-3 flex-wrap items-center">
+        <input
+          type="text" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
+          placeholder="🔍 ค้นหาชื่อ/เบอร์..."
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm w-48 focus:outline-none focus:border-blue-400"
+        />
+        <input
+          type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+        />
+        <span className="text-gray-400 text-sm">—</span>
+        <input
+          type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+        />
+        {(searchTerm || dateFrom || dateTo) && (
+          <button onClick={() => { setSearchTerm(""); setDateFrom(""); setDateTo(""); setPage(1); }}
+            className="px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-lg">✕ ล้าง</button>
+        )}
+      </div>
+
+      {/* Status Filter */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {["", "pending", "paid", "confirmed", "packing", "packed", "shipping", "cancelled"].map((s) => (
           <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }}

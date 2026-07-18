@@ -1522,6 +1522,9 @@ app.get("/api/seller/orders", async (c) => {
     const page = parseInt(c.req.query("page") || "1");
     const limit = parseInt(c.req.query("limit") || "20");
     const status = c.req.query("status") || "";
+    const search = c.req.query("search") || "";
+    const dateFrom = c.req.query("dateFrom") || "";
+    const dateTo = c.req.query("dateTo") || "";
     let sql = "SELECT * FROM orders WHERE 1=1";
     const params: any[] = [];
     if (status) {
@@ -1533,6 +1536,19 @@ app.get("/api/seller/orders", async (c) => {
         sql += " AND status IN (" + statuses.map(() => "?").join(",") + ")";
         params.push(...statuses);
       }
+    }
+    if (search) {
+      sql += " AND (customerName LIKE ? OR customerPhone LIKE ? OR orderNumber LIKE ?)";
+      const kw = `%${search}%`;
+      params.push(kw, kw, kw);
+    }
+    if (dateFrom) {
+      const d = new Date(dateFrom + "T00:00:00+07:00");
+      if (!isNaN(d.getTime())) { sql += " AND orderedAt >= ?"; params.push(dateFrom); }
+    }
+    if (dateTo) {
+      const d = new Date(dateTo + "T00:00:00+07:00");
+      if (!isNaN(d.getTime())) { sql += " AND orderedAt <= ?"; params.push(dateTo + " 23:59:59"); }
     }
     const total = ((db.prepare(sql.replace("SELECT *", "SELECT COUNT(*) as total")).get(...params)) as any)?.total || 0;
     sql += " ORDER BY id DESC LIMIT ? OFFSET ?";
