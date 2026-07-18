@@ -291,8 +291,9 @@ export default function SellerOrdersPage() {
                   }}
                   className="px-3 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">📄 PDF</a>
               </div>
-                </div> {/* close flex-1 */}
-            </div>
+              </div> {/* close flex-1 */}
+            </div> {/* close flex row */}
+          </div>
           ))}
         </div>
       )}
