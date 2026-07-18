@@ -1707,13 +1707,10 @@ app.get("/api/settings", async (c) => {
       storeType: settings.storeType,
       storeAddress: settings.storeAddress,
       storePhone: settings.storePhone,
-      storeEmail: settings.storeEmail,
-      taxId: settings.taxId,
       logoUrl: settings.logoUrl,
       lineId: settings.lineId,
       facebookUrl: settings.facebookUrl,
       footer: settings.footer,
-      promptpayPhone: settings.promptpayPhone,
       licenseNumber: settings.licenseNumber,
       pharmacistName: settings.pharmacistName,
       pharmacistLicense: settings.pharmacistLicense,
@@ -3909,7 +3906,7 @@ app.post("/api/telegram/notify", async (c) => {
 app.get("/api/promotions", async (c) => {
   try {
     const db = getDb();
-    const items = db.prepare("SELECT * FROM promotions ORDER BY id DESC").all();
+    const items = db.prepare("SELECT id, code, nameTh, description, type, value, minOrder, maxDiscount, isActive FROM promotions WHERE isActive=1 ORDER BY id DESC").all();
     return c.json({ items });
   } catch (e: any) { return c.json({ items: [], error: e?.message }, 500); }
 });
