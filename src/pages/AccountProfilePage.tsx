@@ -9,7 +9,7 @@ export default function AccountProfilePage() {
   const [showAddress, setShowAddress] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
-  const [newAddr, setNewAddr] = useState({ label: "บ้าน", address: "", district: "", province: "", zip: "", phone: "", isDefault: false });
+  const [newAddr, setNewAddr] = useState({ fullName: "", label: "บ้าน", address: "", district: "", province: "", zip: "", phone: "", isDefault: false });
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [editAddr, setEditAddr] = useState<any>(null);
   const [addressMsg, setAddressMsg] = useState("");
@@ -46,7 +46,7 @@ export default function AccountProfilePage() {
     const d = await r.json();
     if (d.success) { setAddresses(prev => [...prev, d.address]); setShowAddress(false); setAddressMsg("✅ เพิ่มที่อยู่สำเร็จ"); }
     else { setAddressMsg("❌ " + (d.error || "ไม่สามารถเพิ่มที่อยู่ได้")); }
-    setNewAddr({ label: "บ้าน", address: "", district: "", province: "", zip: "", phone: "", isDefault: false });
+    setNewAddr({ fullName: "", label: "บ้าน", address: "", district: "", province: "", zip: "", phone: "", isDefault: false });
     setTimeout(() => setAddressMsg(""), 3000);
   };
 

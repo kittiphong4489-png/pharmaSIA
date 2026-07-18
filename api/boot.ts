@@ -1074,7 +1074,7 @@ app.get("/api/images/qr-promptpay.jpg", async (c) => {
     const qrPath = path.join(dir, "lib", "PharmaSIA-qr.jpg");
     if (!fs.existsSync(qrPath)) return c.json({ error: "QR not found" }, 404);
     const img = fs.readFileSync(qrPath);
-    return c.body(new Uint8Array(img), 200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" });
+    return c.body(new Uint8Array(img), 200, { "Content-Type": "image/jpeg", "Cache-Control": "no-cache, must-revalidate" });
   } catch { return c.json({ error: "QR not found" }, 404); }
 });
 

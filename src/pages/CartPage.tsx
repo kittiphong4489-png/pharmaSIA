@@ -317,7 +317,7 @@ export default function CartPage() {
             <p className="text-sm text-gray-500 mb-4">กรุณาชำระเงิน <strong>฿{payment.amount.toFixed(2)}</strong> โดยสแกน QR ด้านล่าง</p>
             <div className="flex justify-center">
               <div className="relative inline-flex">
-                <img src="/api/images/qr-promptpay.jpg" alt="PromptPay QR"
+                <img src={`/api/images/qr-promptpay.jpg?v=${Date.now()}`} alt="PromptPay QR"
                   className="w-56 h-56 rounded-xl shadow-md border-2 border-gray-100" />
                 <a href="/api/images/qr-promptpay.jpg" download="PharmaSIA-promptpay.jpg"
                   className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full shadow flex items-center justify-center text-blue-600 hover:bg-white border border-gray-200 cursor-pointer text-xs"
