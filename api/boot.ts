@@ -871,19 +871,9 @@ app.post("/api/orders", async (c) => {
     const grandTotal = Math.max(0, subtotal + shippingFee - discount + tax);
 
     // Require authentication for ordering
-    const authHeader = c.req.header("authorization") || "";
-    const authToken = authHeader.replace("Bearer ", "");
-    if (!authToken) return c.json({ success: false, error: "กรุณาเข้าสู่ระบบก่อนสั่งซื้อ" }, 401);
-    
-    let userId: number | null = null;
-    try {
-      const { verifyToken } = await import("./lib/auth");
-      const authPayload = await verifyToken(authToken);
-      if (!authPayload?.userId) return c.json({ success: false, error: "กรุณาเข้าสู่ระบบก่อนสั่งซื้อ" }, 401);
-      userId = authPayload.userId;
-    } catch {
-      return c.json({ success: false, error: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" }, 401);
-    }
+    const authPayload = await requireAdmin(c);
+    if (!authPayload) return c.json({ success: false, error: "กรุณาเข้าสู่ระบบก่อนสั่งซื้อ" }, 401);
+    const userId = authPayload.userId;
     const orderResult = db.prepare(`INSERT INTO orders (orderNumber, userId, sessionId, customerName, customerPhone, shippingAddressJson, subtotal, shippingFee, tax, grandTotal, status, notes, orderedAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))`).run(
       orderNumber, userId, sessionId, body.customerName || "", body.customerPhone || "",
