@@ -1248,75 +1248,206 @@ async function requireAdmin(c: any): Promise<any> {
   return payload;
 }
 
-// ── Seller Bot (AI Assistant) ──
+// ── Seller Bot v2 (Smart Assistant with Safety) ──
 app.post("/api/seller/bot", async (c) => {
   try {
     const auth = await requireAdmin(c);
     if (!auth) return c.json({ error: "Unauthorized" }, 401);
     const body = await c.req.json();
     const query = (body.query || "").trim();
-    if (!query) return c.json({ reply: "พิมพ์คำถามมาได้เลยครับ เช่น 'ออเดอร์ค้าง', 'สินค้า para', 'ยอดขายวันนี้'", type: "help" });
+    const confirmId = body.confirmId as string || "";
+    if (!query && !confirmId) return c.json({ reply: "🤖 พิมพ์คำถามได้เลยครับ\n\n· ออเดอร์ค้าง\n· ยืนยัน #7\n· ยอดขายวันนี้\n· สต็อกใกล้หมด\n· สินค้า para\n· สรุป", type: "help" });
     
     const db = getDb();
     const q = query.toLowerCase();
-
-    // 1. Order tracking by number
-    const ordMatch = q.match(/ord-\w+/i);
-    if (ordMatch) {
-      const order = db.prepare("SELECT o.* FROM orders o WHERE o.orderNumber = ?").get(ordMatch[0].toUpperCase()) as any;
-      if (order) {
-        const items = db.prepare("SELECT oi.*, pr.nameTh FROM order_items oi JOIN products pr ON oi.productId = pr.id WHERE oi.orderId = ?").all(order.id);
-        const sMap: Record<string,string> = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
-        return c.json({ reply: `📦 ${order.orderNumber}\nสถานะ: ${sMap[order.status]||order.status}\nยอด: ฿${order.grandTotal?.toFixed(2)}\n${items.map((i:any)=>'· '+i.nameTh+' x'+i.quantity).join('\n')}`, type: "order" });
+    const token = auth.userId || "anon";
+    
+    // ── Confirmation Resolution ──
+    const pending = confirmations.get(token);
+    if (pending && (q.match(/^(ใช่|yes|confirm|ok|ตกลง)$/i) || confirmId === pending.id)) {
+      if (Date.now() - pending.ts > 30000) {
+        confirmations.delete(token);
+        return c.json({ reply: "⏰ คำขอยืนยันหมดเวลาแล้ว", type: "error" });
       }
-      return c.json({ reply: `❌ ไม่พบออเดอร์ ${ordMatch[0].toUpperCase()}`, type: "error" });
+      const result = executeConfirmed(db, pending);
+      confirmations.delete(token);
+      if (result.error) return c.json({ reply: result.error, type: "error" });
+      return c.json({ reply: result.reply, type: "success" });
     }
-
-    // 2. Pending orders
-    if (/ออเดอร์|ค้าง|pending|รอดำเนินการ|ยังไม่ได/.test(q)) {
+    if (pending && q.match(/^(ไม่|no|cancel|ยกเลิก)$/i)) {
+      confirmations.delete(token);
+      return c.json({ reply: "✅ ยกเลิกคำขอแล้ว", type: "info" });
+    }
+    
+    // ── Intent Parser ──
+    
+    // 1. Confirm order: "ยืนยัน #7", "confirm 7"
+    let m = q.match(/(?:ยืนยัน|confirm|อนุมัติ)\s*#?(\d+)/i);
+    if (m) return confirmAction(db, token, "confirmOrder", parseInt(m[1]));
+    
+    // 2. Pack order: "แพ็ค #7", "pack 7"
+    m = q.match(/(?:แพ็ค|pack|จัดของ)\s*#?(\d+)/i);
+    if (m) return confirmAction(db, token, "packOrder", parseInt(m[1]));
+    
+    // 3. Ship order: "ส่ง #7 flash EM123", "ship 7 Kerry TH"
+    m = q.match(/(?:ส่ง|ship|จัดส่ง)\s*#?(\d+)\s*(flash|kerry|thai\s*post)?\s*(\S+)?/i);
+    if (m) return confirmAction(db, token, "shipOrder", parseInt(m[1]));
+    
+    // 4. Cancel order: "ยกเลิก #7", "cancel 7"
+    m = q.match(/(?:ยกเลิก|cancel|ลบ)\s*#?(\d+)/i);
+    if (m) return confirmAction(db, token, "cancelOrder", parseInt(m[1]));
+    
+    // 5. Track order by number
+    m = q.match(/(ord-\w+)/i);
+    if (m) {
+      const order = db.prepare("SELECT * FROM orders WHERE orderNumber = ?").get(m[1].toUpperCase()) as any;
+      if (!order) return c.json({ reply: `❌ ไม่พบออเดอร์ ${m[1].toUpperCase()}`, type: "error" });
+      const items = db.prepare("SELECT oi.*, pr.nameTh FROM order_items oi JOIN products pr ON oi.productId = pr.id WHERE oi.orderId = ?").all(order.id);
+      const sMap: any = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
+      return c.json({ reply: `📦 #${order.id} ${order.orderNumber}\nสถานะ: ${sMap[order.status]||order.status}\nยอด: ฿${(order.grandTotal||0).toFixed(2)}`, type: "order" });
+    }
+    
+    // 6. Pending orders
+    if (/ออเดอร์ค้าง|pending|รอดำเนินการ|ยังไม่ได/.test(q)) {
       const orders = db.prepare("SELECT * FROM orders WHERE status IN ('pending','paid','confirmed','packing') ORDER BY id DESC LIMIT 5").all() as any[];
       if (orders.length === 0) return c.json({ reply: "✅ ไม่มีออเดอร์ค้าง", type: "success" });
-      const sMap: Record<string,string> = {pending:"🟡 รอจ่าย",paid:"🟢 จ่ายแล้ว",confirmed:"🔵 รออนุมัติ",packing:"📦 กำลังแพ็ค"};
-      return c.json({ reply: `📋 ${orders.length} รายการ:\n${orders.map((o:any)=>'· #'+o.id+' '+o.orderNumber+' '+sMap[o.status]).join('\n')}`, type: "orders" });
+      const sMap: any = {pending:"🟡 รอจ่าย",paid:"🟢 จ่ายแล้ว",confirmed:"🔵 รออนุมัติ",packing:"📦 กำลังแพ็ค"};
+      return c.json({ reply: `📋 ${orders.length} รายการ:\n` + orders.map((o:any)=>`· #${o.id} ${sMap[o.status]||o.status} ฿${(o.grandTotal||0).toFixed(0)}`).join('\n'), type: "orders" });
     }
-
-    // 3. Today's sales
-    if (/ยอดขาย|วันนี้|revenue/.test(q)) {
-      const today = db.prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(grandTotal),0) as total FROM orders WHERE date(updatedAt) = date('now') AND status NOT IN ('cancelled')").get() as any;
-      return c.json({ reply: `💰 ยอดขายวันนี้\n📦 ${today.cnt} ออเดอร์\n💵 ฿${(today.total||0).toFixed(2)}`, type: "sales" });
+    
+    // 7. Daily brief
+    if (/สรุป|brief|morning|รายงาน|วันนี้/.test(q)) {
+      const today = db.prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(grandTotal),0) as total FROM orders WHERE date(updatedAt,'+7 hours') = date('now','+7 hours') AND status NOT IN ('cancelled')").get() as any;
+      const pending = db.prepare("SELECT COUNT(*) as cnt FROM orders WHERE status IN ('paid','confirmed','packing')").get() as any;
+      const low = db.prepare("SELECT COUNT(*) as cnt FROM products WHERE status='active' AND stock > 0 AND stock <= 5").get() as any;
+      return c.json({ 
+        reply: `📊 สรุปประจำวัน\n\n💰 ออเดอร์วันนี้: ${today.cnt} รายการ\n💵 ยอดขาย: ฿${(today.total||0).toFixed(2)}\n📋 รอดำเนินการ: ${pending.cnt} ออเดอร์\n⚠️ สต็อกใกล้หมด: ${low.cnt} รายการ`,
+        type: "brief"
+      });
     }
-
-    // 4. Low stock
-    if (/สต็อก|ใกล้หมด|stock\s|low\sstock/i.test(q)) {
-      const products = db.prepare("SELECT id, nameTh, stock FROM products WHERE status='active' AND stock > 0 AND stock <= 5 ORDER BY stock ASC LIMIT 10").all() as any[];
+    
+    // 8. Low stock
+    if (/สต็อก|stock|ใกล้หมด/.test(q)) {
+      const products = db.prepare("SELECT nameTh, stock FROM products WHERE status='active' AND stock > 0 AND stock <= 5 ORDER BY stock ASC LIMIT 10").all() as any[];
       if (products.length === 0) return c.json({ reply: "✅ ไม่มีสินค้าใกล้หมด", type: "success" });
-      return c.json({ reply: `⚠️ ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' (เหลือ '+p.stock+')').join('\n')}`, type: "stock" });
+      return c.json({ reply: `⚠️ ${products.length} รายการ\n` + products.map((p:any)=>`· ${p.nameTh} (เหลือ ${p.stock})`).join('\n'), type: "stock" });
     }
-
-    // 5. Product search (explicit or fallback)
-    const searchKw = q.replace(/^(สินค้า|ค้นหา|find|search)\s*/i, '').trim();
-    if (searchKw || /สินค้า|ค้นหา|find|search/i.test(q)) {
-      const kw = searchKw || q;
-      if (!kw || kw.length < 1) return c.json({ reply: "🔍 ระบุชื่อสินค้าที่ต้องการค้นหา เช่น 'สินค้า para'", type: "help" });
-      const products = db.prepare("SELECT id, nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all('%'+kw+'%', '%'+kw+'%', '%'+kw+'%') as any[];
-      if (products.length === 0) return c.json({ reply: `❌ ไม่พบ "${kw}"`, type: "error" });
-      return c.json({ reply: `🔍 ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' ฿'+(p.price||0)+' (สต็อก:'+p.stock+')').join('\n')}`, type: "products" });
+    
+    // 9. Top products
+    if (/ขายดี|top|best|นิยม/.test(q)) {
+      const products = db.prepare("SELECT nameTh, soldCount, price FROM products WHERE status='active' AND soldCount > 0 ORDER BY soldCount DESC LIMIT 5").all() as any[];
+      if (products.length === 0) return c.json({ reply: "ยังไม่มีข้อมูลสินค้าขายดี", type: "info" });
+      return c.json({ reply: `🏆 ขายดี\n` + products.map((p:any)=>`· ${p.nameTh} (${p.soldCount} ชิ้น) ฿${(p.price||0).toFixed(0)}`).join('\n'), type: "top" });
     }
-
-    // 6. Fallback: search for the query directly
+    
+    // 10. Product search: "สินค้า para" / "ค้นหา vitamin"
+    m = q.match(/(?:สินค้า|ค้นหา|find|search|หา)\s+(.+)/i);
+    const searchTerm = m ? m[1].trim() : null;
+    if (searchTerm && searchTerm.length < 2) return c.json({ reply: "🔍 กรุณาพิมพ์อย่างน้อย 2 ตัวอักษร", type: "help" });
+    if (searchTerm) {
+      const kw = '%' + searchTerm + '%';
+      const products = db.prepare("SELECT nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all(kw,kw,kw) as any[];
+      if (products.length === 0) return c.json({ reply: `❌ ไม่พบ "${searchTerm}"`, type: "error" });
+      return c.json({ 
+        reply: `🔍 "${searchTerm}" ${products.length} รายการ\n\n` + products.map((p:any)=>`· ${p.nameTh}\n  ฿${(p.price||0).toFixed(0)} (สต็อก:${p.stock})`).join('\n') + `\n\n⚠️ ปรึกษาเภสัชกรก่อนใช้ยา`,
+        type: "products"
+      });
+    }
+    
+    // 11. Customer lookup: "ลูกค้า 081" / "เบอร์ 08"
+    m = q.match(/(?:ลูกค้า|เบอร์|customer)\s+(08\d*)/i);
+    if (m) {
+      const phone = m[1] + '%';
+      const orders = db.prepare("SELECT id, orderNumber, customerName, customerPhone, grandTotal, status, orderedAt FROM orders WHERE customerPhone LIKE ? ORDER BY id DESC LIMIT 5").all(phone) as any[];
+      if (orders.length === 0) return c.json({ reply: `❌ ไม่พบลูกค้าเบอร์ ${m[1]}`, type: "error" });
+      const sMap: any = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
+      return c.json({ reply: `👤 ลูกค้า ${m[1]}\n${orders.length} ออเดอร์:\n` + orders.map((o:any)=>`· #${o.id} ${sMap[o.status]||o.status} ฿${(o.grandTotal||0).toFixed(0)}`).join('\n'), type: "customer" });
+    }
+    
+    // 12. Help
+    if (/ช่วย|help|^\?$/.test(q)) {
+      return c.json({ 
+        reply: "🤖 **คำสั่งทั้งหมด**\n\n⚡ ด่วน:\n· ยืนยัน #7\n· แพ็ค #7\n· ส่ง #7\n· ยกเลิก #7\n\n🔍 ค้นหา:\n· ORD-xxx\n· สินค้า para\n· ลูกค้า 081xxx\n\n📊 สรุป:\n· สรุป\n· สต็อก\n· ขายดี\n· ออเดอร์ค้าง",
+        type: "help"
+      });
+    }
+    
+    // 13. Fallback: smart search
     if (q.length >= 2) {
-      const products = db.prepare("SELECT id, nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all('%'+q+'%', '%'+q+'%', '%'+q+'%') as any[];
+      const kw = '%' + q + '%';
+      const products = db.prepare("SELECT nameTh, price, stock FROM products WHERE status='active' AND (nameTh LIKE ? OR nameEn LIKE ? OR sku LIKE ?) LIMIT 5").all(kw,kw,kw) as any[];
       if (products.length > 0) {
-        return c.json({ reply: `🔍 "${query}" ${products.length} รายการ:\n${products.map((p:any)=>'· '+p.nameTh+' ฿'+(p.price||0)+' (สต็อก:'+p.stock+')').join('\n')}`, type: "products" });
+        return c.json({ 
+          reply: `🔍 "${query}" ${products.length} รายการ\n\n` + products.map((p:any)=>`· ${p.nameTh}\n  ฿${(p.price||0).toFixed(0)} (สต็อก:${p.stock})`).join('\n') + `\n\n⚠️ ปรึกษาเภสัชกรก่อนใช้ยา`,
+          type: "products"
+        });
       }
     }
-
-    // Help
-    return c.json({ reply: "🤖 พิมพ์คำถามได้เลย\n\n· ออเดอร์ค้าง\n· ORD-xxx\n· ยอดขายวันนี้\n· สต็อกใกล้หมด\n· สินค้า para", type: "help" });
+    
+    return c.json({ 
+      reply: "🤖 ไม่เข้าใจคำสั่งครับ\nพิมพ์ 'ช่วย' เพื่อดูคำสั่งทั้งหมด",
+      type: "help"
+    });
 
   } catch (e: any) {
-    return c.json({ reply: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่", type: "error" }, 500);
+    return c.json({ reply: "❌ ระบบขัดข้อง กรุณาลองใหม่", type: "error" }, 500);
   }
+});
+
+// ── Confirmation Store ──
+const confirmations = new Map<string, { id: string; action: string; orderId: number; ts: number }>();
+
+function confirmAction(db: any, token: string, action: string, orderId: number) {
+  if (!orderId || isNaN(orderId) || orderId <= 0) return c.json({ reply: "❌ ระบุหมายเลขออเดอร์ไม่ถูกต้อง (เช่น: ยืนยัน #7)", type: "error" });
+  
+  const order = db.prepare("SELECT o.* FROM orders o WHERE o.id = ?").get(orderId) as any;
+  if (!order) return c.json({ reply: `❌ ไม่พบออเดอร์ #${orderId}`, type: "error" });
+  
+  const sMap: any = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
+  const newStatus: any = { confirmOrder: "confirmed", packOrder: "packing", shipOrder: "shipping", cancelOrder: "cancelled" };
+  const label: any = { confirmOrder: "ยืนยันออเดอร์", packOrder: "เริ่มแพ็ค", shipOrder: "จัดส่ง", cancelOrder: "ยกเลิก" };
+  
+  // Validate state
+  if (action !== "cancelOrder" && order.status === newStatus[action]) {
+    return c.json({ reply: `⚠️ ออเดอร์ #${orderId} อยู่ในสถานะ ${sMap[order.status]} อยู่แล้ว`, type: "error" });
+  }
+  
+  const id = Math.random().toString(36).slice(2, 8);
+  confirmations.set(token, { id, action, orderId, ts: Date.now() });
+  
+  return c.json({
+    reply: `📦 #${order.id} ${order.orderNumber}\nสถานะ: ${sMap[order.status]}\nยอด: ฿${(order.grandTotal||0).toFixed(2)}\n\n❓ ${label[action]}?\n\nพิมพ์ "ใช่" เพื่อยืนยัน, "ไม่" เพื่อยกเลิก\n⏰ หมดเวลาใน 30 วิ`,
+    type: "confirm",
+    confirmId: id
+  });
+}
+
+function executeConfirmed(db: any, pending: { action: string; orderId: number }) {
+  const { action, orderId } = pending;
+  const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId) as any;
+  if (!order) return { error: `❌ ไม่พบออเดอร์ #${orderId}` };
+  
+  const newStatus: any = { confirmOrder: "confirmed", packOrder: "packing", shipOrder: "shipping", cancelOrder: "cancelled" };
+  const sMap: any = {pending:"รอจ่าย",paid:"จ่ายแล้ว",confirmed:"รออนุมัติ",packing:"กำลังแพ็ค",packed:"รอจัดส่ง",shipping:"กำลังส่ง",delivered:"ส่งแล้ว"};
+  
+  try {
+    db.prepare("UPDATE orders SET status = ?, updatedAt = datetime('now','+7 hours') WHERE id = ?").run(newStatus[action], orderId);
+    return { reply: `✅ #${orderId} → ${sMap[newStatus[action]]}`, error: null };
+  } catch (e: any) {
+    return { reply: null, error: `❌ ${e?.message || 'ไม่สามารถดำเนินการได้'}` };
+  }
+}
+
+// ── Badge endpoint ──
+app.get("/api/seller/bot/badge", async (c) => {
+  try {
+    const auth = await requireAdmin(c);
+    if (!auth) return c.json({ count: 0 });
+    const db = getDb();
+    const pending = db.prepare("SELECT COUNT(*) as cnt FROM orders WHERE status IN ('paid','confirmed','packing')").get() as any;
+    const low = db.prepare("SELECT COUNT(*) as cnt FROM products WHERE status='active' AND stock > 0 AND stock <= 5").get() as any;
+    return c.json({ count: (pending.cnt || 0) + (low.cnt || 0) });
+  } catch { return c.json({ count: 0 }); }
 });
 
 // Auth helper for regular users (not admin)
