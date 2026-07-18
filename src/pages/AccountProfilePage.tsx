@@ -238,6 +238,8 @@ export default function AccountProfilePage() {
               <button onClick={() => setShowAddress(false)}><X className="w-4 h-4 text-gray-400" /></button>
             </div>
             <div className="space-y-3">
+              <input value={newAddr.fullName} onChange={e => setNewAddr({...newAddr, fullName: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="ชื่อ-นามสกุลผู้รับ" />
               <select value={newAddr.label} onChange={e => setNewAddr({...newAddr, label: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 <option value="บ้าน">บ้าน</option>

@@ -474,7 +474,7 @@ export default function CartPage() {
                         const first = d.addresses[0];
                         setSelectedAddressId(first.id);
                         setForm({
-                          customerName: form.customerName || first.fullName || "",
+                          customerName: first.fullName || form.customerName || "",
                           customerPhone: first.phone || form.customerPhone || "",
                           address: first.address || form.address,
                           district: first.district || form.district,
