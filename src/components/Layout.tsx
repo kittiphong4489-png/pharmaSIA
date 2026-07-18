@@ -234,7 +234,39 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <div className={location.pathname.startsWith("/seller") ? "flex" : ""}>
+        {/* Seller Sidebar */}
+        {location.pathname.startsWith("/seller") && (
+          <aside className="hidden lg:flex flex-col w-52 bg-white border-r border-gray-200 min-h-screen pt-4 px-3 shrink-0">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-3">เมนูร้านค้า</div>
+            {[
+              { to: "/seller", label: "📊 แดชบอร์ด" },
+              { to: "/seller/orders", label: "📦 ออเดอร์" },
+              { to: "/seller/products", label: "💊 สินค้า" },
+              { to: "/seller/categories", label: "📂 หมวดหมู่" },
+              { to: "/seller/sub-categories", label: "🏷️ หมวดย่อย" },
+              { to: "/seller/shipping", label: "🚚 ค่าส่ง" },
+              { to: "/seller/promotions", label: "🎫 โปรโมชั่น" },
+              { to: "/seller/pricing", label: "💵 กำหนดราคา" },
+              { to: "/seller/batches", label: "📋 Batch/Lot" },
+              { to: "/seller/chat", label: "💬 แชท" },
+              { to: "/seller/settings", label: "⚙️ ตั้งค่า" },
+            ].map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
+                  location.pathname === link.to 
+                    ? "bg-green-50 text-green-700 font-semibold" 
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </aside>
+        )}
+        <main className={`flex-1 ${location.pathname.startsWith("/seller") ? "px-4 py-6" : "max-w-7xl mx-auto px-4 py-6"}`}>
         {children}
       </main>
 
