@@ -52,6 +52,10 @@ export default function SellerOrdersPage() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [trackingCarrier, setTrackingCarrier] = useState("Flash");
 
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulking, setBulking] = useState(false);
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem("pharma_token");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -70,6 +74,33 @@ export default function SellerOrdersPage() {
   };
 
   useEffect(() => { loadOrders(); }, [statusFilter, page, searchTerm, dateFrom, dateTo]);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const bulkConfirm = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`ยืนยัน ${selectedIds.size} ออเดอร์ที่เลือก?`)) return;
+    setBulking(true);
+    let ok = 0; let fail = 0;
+    for (const id of selectedIds) {
+      try {
+        const data = await apiClient(`/api/seller/orders/${id}/status`, {
+          method: "PUT", body: JSON.stringify({ status: "confirmed", confirmPayment: true }),
+        });
+        if (data.success) ok++; else fail++;
+      } catch { fail++; }
+    }
+    setSelectedIds(new Set());
+    setBulking(false);
+    alert(`✅ ${ok} สำเร็จ${fail > 0 ? `, ❌ ${fail} ไม่สำเร็จ` : ""}`);
+    loadOrders();
+  };
 
   const updateStatus = async (id: number, status: string) => {
     setUpdating(id);
@@ -158,6 +189,19 @@ export default function SellerOrdersPage() {
         ))}
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+          <span className="text-sm font-medium text-blue-700">{selectedIds.size} รายการที่เลือก</span>
+          <button onClick={bulkConfirm} disabled={bulking}
+            className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+            {bulking ? "กำลังดำเนินการ..." : "✅ ยืนยันทั้งหมด"}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())}
+            className="px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 rounded-lg">✕ ยกเลิก</button>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-8 text-gray-400">กำลังโหลด...</div>
       ) : orders.length === 0 ? (
@@ -166,6 +210,13 @@ export default function SellerOrdersPage() {
         <div className="space-y-3">
           {orders.map((o) => (
             <div key={o.id} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex items-start gap-3">
+                {/* Checkbox */}
+                {(o.status === "paid" || o.status === "pending") && (
+                  <input type="checkbox" checked={selectedIds.has(o.id)} onChange={() => toggleSelect(o.id)}
+                    className="mt-1.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                )}
+                <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <span className="font-mono text-sm font-bold text-gray-900 truncate block max-w-[200px] sm:max-w-xs">{o.orderNumber}</span>
@@ -240,6 +291,7 @@ export default function SellerOrdersPage() {
                   }}
                   className="px-3 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">📄 PDF</a>
               </div>
+                </div> {/* close flex-1 */}
             </div>
           ))}
         </div>
