@@ -866,8 +866,7 @@ app.post("/api/orders", async (c) => {
         db.prepare("UPDATE promotions SET usedCount=usedCount+1 WHERE id=?").run(promo.id);
       } else { promoCode = ""; }
     }
-    let tax = Math.round((subtotal + shippingFee - discount) * 0.07 * 100) / 100;
-    if (tax < 0) tax = 0;
+    let tax = 0;
     const grandTotal = Math.max(0, subtotal + shippingFee - discount + tax);
 
     // Require authentication for ordering
